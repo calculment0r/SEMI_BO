@@ -291,13 +291,18 @@
 
   // ------------------------------------------------------- Spectre (header)
   // Fenetre glissante de 20s (10 avant / 10 apres la position courante)
-  // dessinee sur un canvas, cue rouge fixe au centre. Les pics sont extraits
-  // une fois par piste via Web Audio (decodeAudioData), en tache de fond, au
-  // moment ou le plein ecran s'ouvre — jamais pour les 7 pistes d'un coup.
+  // dessinee sur un canvas, cue rouge fixe au centre. Les pics sont
+  // PRECALCULES a la construction du site (voir scripts/gen-waveforms, sortie
+  // dans assets/waveforms/*.json) : un petit JSON de quelques Ko charge quasi
+  // instantanement, plutot que retelecharger + redecoder le mp3 entier (des
+  // Mo) a chaque ouverture du plein ecran. Si le JSON precalcule manque pour
+  // une piste, on retombe sur un decodage Web Audio en direct dans le
+  // navigateur, plus lent mais fonctionnel.
   var waveformCtx = null;
-  var waveformCache = {}; // fichier -> Float32Array de pics (max abs par tranche)
-  var waveformPeaksPerSecond = 10;
+  var waveformCache = {}; // fichier -> { peaks, pps }
+  var waveformPeaksPerSecond = 10; // valeur par defaut, utilisee par le decodage de secours
   var waveformCurrentPeaks = null;
+  var waveformCurrentPPS = waveformPeaksPerSecond;
   var waveformCurrentFile = null;
   var waveformRAF = null;
   var waveformColors = null;
@@ -308,6 +313,10 @@
     if (!Ctor) return null;
     try { waveformCtx = new Ctor(); } catch (e) { waveformCtx = null; }
     return waveformCtx;
+  }
+
+  function precomputedWaveformPath(file) {
+    return file.replace("/audio/", "/assets/waveforms/").replace(/\.mp3(\?.*)?$/i, ".json");
   }
 
   function extractPeaks(buffer) {
@@ -327,27 +336,44 @@
     return peaks;
   }
 
-  function loadWaveform(track) {
-    var file = track && track.file;
-    waveformCurrentPeaks = null;
-    waveformCurrentFile = file || null;
-    if (!file) { drawWaveformFrame(); return; }
-    if (waveformCache[file]) {
-      waveformCurrentPeaks = waveformCache[file];
+  function applyWaveform(file, peaks, pps) {
+    waveformCache[file] = { peaks: peaks, pps: pps };
+    if (waveformCurrentFile === file) {
+      waveformCurrentPeaks = peaks;
+      waveformCurrentPPS = pps;
       drawWaveformFrame();
-      return;
     }
+  }
+
+  function decodeWaveformLive(file) {
     var ctx = waveformAudioCtx();
     if (!ctx) return; // Web Audio indisponible : le spectre reste vide, la lecture n'est pas affectee
     fetch(file)
       .then(function (r) { return r.arrayBuffer(); })
       .then(function (buf) { return ctx.decodeAudioData(buf); })
-      .then(function (audioBuffer) {
-        var peaks = extractPeaks(audioBuffer);
-        waveformCache[file] = peaks;
-        if (waveformCurrentFile === file) { waveformCurrentPeaks = peaks; drawWaveformFrame(); }
-      })
+      .then(function (audioBuffer) { applyWaveform(file, extractPeaks(audioBuffer), waveformPeaksPerSecond); })
       .catch(function () { /* spectre indisponible pour ce morceau : pas bloquant */ });
+  }
+
+  function loadWaveform(track) {
+    var file = track && track.file;
+    waveformCurrentPeaks = null;
+    waveformCurrentFile = file || null;
+    if (!file) { drawWaveformFrame(); return; }
+    var cached = waveformCache[file];
+    if (cached) {
+      waveformCurrentPeaks = cached.peaks;
+      waveformCurrentPPS = cached.pps;
+      drawWaveformFrame();
+      return;
+    }
+    fetch(precomputedWaveformPath(file))
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+      .then(function (data) {
+        if (!data || !Array.isArray(data.peaks) || !data.peaks.length) return Promise.reject();
+        applyWaveform(file, data.peaks, data.peaksPerSecond || waveformPeaksPerSecond);
+      })
+      .catch(function () { decodeWaveformLive(file); });
   }
 
   function ensureCanvasSize() {
@@ -383,19 +409,20 @@
         upcoming: "rgba(139, 149, 161, 0.4)",
       };
     }
+    var pps = waveformCurrentPPS || waveformPeaksPerSecond;
     var pos = player.relPosition();
     var windowSec = 20, half = windowSec / 2;
     var t0 = pos - half, t1 = pos + half;
     var pxPerSec = cw / windowSec;
-    var barW = Math.max(1, (pxPerSec / waveformPeaksPerSecond) * 0.7);
+    var barW = Math.max(1, (pxPerSec / pps) * 0.7);
     var midY = ch / 2;
     var maxBarH = ch * 0.86;
-    var startIdx = Math.max(0, Math.floor(t0 * waveformPeaksPerSecond));
-    var endIdx = Math.min(peaks.length - 1, Math.ceil(t1 * waveformPeaksPerSecond));
-    var splitIdx = Math.floor(pos * waveformPeaksPerSecond);
+    var startIdx = Math.max(0, Math.floor(t0 * pps));
+    var endIdx = Math.min(peaks.length - 1, Math.ceil(t1 * pps));
+    var splitIdx = Math.floor(pos * pps);
 
     function addBar(i) {
-      var peakTime = i / waveformPeaksPerSecond;
+      var peakTime = i / pps;
       var x = (peakTime - t0) * pxPerSec;
       var barH = Math.max(1, Math.min(1, peaks[i] * 1.15) * maxBarH);
       g.rect(x - barW / 2, midY - barH / 2, barW, barH);

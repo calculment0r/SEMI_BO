@@ -11,7 +11,7 @@
  * iPhone. L'album n'est donc jamais telecharge entierement en arriere-plan.
  */
 
-var CACHE = "semi-v2";
+var CACHE = "semi-v3";
 
 var APP_SHELL = [
   "./",
@@ -32,6 +32,13 @@ var APP_SHELL = [
   "./assets/scenes/scene-booking.jpg",
   "./assets/scenes/scene-pill.jpg",
   "./assets/scenes/scene-morgue.jpg",
+  "./assets/waveforms/01-half-dead.json",
+  "./assets/waveforms/02-living-proof-live.json",
+  "./assets/waveforms/03-backlash.json",
+  "./assets/waveforms/04-la-semi.json",
+  "./assets/waveforms/05-fast-feat-trace.json",
+  "./assets/waveforms/06-living-proof.json",
+  "./assets/waveforms/07-dance-around.json",
 ];
 
 self.addEventListener("install", function (event) {
