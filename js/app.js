@@ -175,7 +175,8 @@
   var lyricsBannerArtist = $("lyrics-banner-artist");
   var lyricsBannerTrack = $("lyrics-banner-track");
   var lyricsBg = $("lyrics-bg");
-  var waveformCanvas = $("waveform-canvas");
+  var waveformCanvasAccent = $("waveform-canvas-accent");
+  var waveformCanvasGray = $("waveform-canvas-gray");
   var waveformEl = $("waveform");
 
   // Visuel de la piste courante : vignette du lecteur, bandeau + fond du
@@ -290,14 +291,19 @@
   lyricsBox.addEventListener("touchmove", function () { userScrollUntil = Date.now() + 4000; });
 
   // ------------------------------------------------------- Spectre (header)
-  // Fenetre glissante de 20s (10 avant / 10 apres la position courante)
-  // dessinee sur un canvas, cue rouge fixe au centre. Les pics sont
-  // PRECALCULES a la construction du site (voir scripts/gen-waveforms, sortie
-  // dans assets/waveforms/*.json) : un petit JSON de quelques Ko charge quasi
-  // instantanement, plutot que retelecharger + redecoder le mp3 entier (des
-  // Mo) a chaque ouverture du plein ecran. Si le JSON precalcule manque pour
-  // une piste, on retombe sur un decodage Web Audio en direct dans le
-  // navigateur, plus lent mais fonctionnel.
+  // Fenetre glissante de 20s (10 avant / 10 apres la position courante),
+  // cue rouge fixe au centre. Les pics sont PRECALCULES a la construction du
+  // site (voir scripts/gen-waveforms, sortie dans assets/waveforms/*.json) :
+  // un petit JSON de quelques Ko charge quasi instantanement. Si le JSON
+  // manque pour une piste, on retombe sur un decodage Web Audio en direct.
+  //
+  // Le spectre de la piste entiere est dessine UNE SEULE FOIS (deux bitmaps :
+  // deja-joue en bleu, a-venir en gris), et le defilement pendant la lecture
+  // se fait ensuite par simple translateX sur ces bitmaps deja rendus —
+  // anime par le compositeur (GPU), sans redessiner un seul pixel a chaque
+  // frame. La premiere version redessinait ~200 barres par frame et restait
+  // saccadee meme optimisee ; ceci est l'approche standard pour un defilement
+  // fluide (c'est ainsi que fonctionnent la plupart des lecteurs a spectre).
   var waveformCtx = null;
   var waveformCache = {}; // fichier -> { peaks, pps }
   var waveformPeaksPerSecond = 10; // valeur par defaut, utilisee par le decodage de secours
@@ -306,6 +312,9 @@
   var waveformCurrentFile = null;
   var waveformRAF = null;
   var waveformColors = null;
+  var waveformScale = 0; // px CSS par seconde, fige au moment du rendu des bitmaps
+  var waveformHalfWidth = 0; // moitie de la largeur CSS de #waveform
+  var WAVEFORM_MAX_PX_WIDTH = 12000; // securite : reste large sous les limites connues de <canvas>
 
   function waveformAudioCtx() {
     if (waveformCtx) return waveformCtx;
@@ -341,7 +350,8 @@
     if (waveformCurrentFile === file) {
       waveformCurrentPeaks = peaks;
       waveformCurrentPPS = pps;
-      drawWaveformFrame();
+      buildWaveformBitmaps();
+      updateWaveformScroll();
     }
   }
 
@@ -359,12 +369,13 @@
     var file = track && track.file;
     waveformCurrentPeaks = null;
     waveformCurrentFile = file || null;
-    if (!file) { drawWaveformFrame(); return; }
+    if (!file) return;
     var cached = waveformCache[file];
     if (cached) {
       waveformCurrentPeaks = cached.peaks;
       waveformCurrentPPS = cached.pps;
-      drawWaveformFrame();
+      buildWaveformBitmaps();
+      updateWaveformScroll();
       return;
     }
     fetch(precomputedWaveformPath(file))
@@ -376,104 +387,84 @@
       .catch(function () { decodeWaveformLive(file); });
   }
 
-  function ensureCanvasSize() {
-    if (!waveformCanvas) return;
-    var rect = waveformCanvas.getBoundingClientRect();
-    // Plafonne le DPR : au-dela de 2x, invisible sur ce petit bandeau mais
-    // ca double/triple le nombre de pixels a remplir a chaque frame.
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var w = Math.max(1, Math.round(rect.width * dpr));
-    var h = Math.max(1, Math.round(rect.height * dpr));
-    if (waveformCanvas.width !== w || waveformCanvas.height !== h) {
-      waveformCanvas.width = w;
-      waveformCanvas.height = h;
-    }
-  }
-
-  // Dessine tout le "passe" en un seul chemin/fill, puis tout "l'a-venir" en
-  // un seul autre : deux changements de fillStyle et deux fill() par frame
-  // au lieu d'un fillRect individuel (avec son propre changement de style)
-  // par barre — c'etait la principale source de rame sur mobile.
-  function drawWaveformFrame() {
-    if (!waveformCanvas || !lyricsSection.classList.contains("fullscreen")) return;
-    var g = waveformCanvas.getContext("2d");
-    if (!g) return;
-    var cw = waveformCanvas.width, ch = waveformCanvas.height;
-    g.clearRect(0, 0, cw, ch);
+  // Rendu unique du spectre complet de la piste, en deux exemplaires colores
+  // (deja-joue / a-venir). Rappele sur chargement de nouveaux pics et sur
+  // redimensionnement (l'echelle px/seconde depend de la largeur du bandeau).
+  function buildWaveformBitmaps() {
+    if (!waveformEl || !waveformCanvasAccent || !waveformCanvasGray) return;
     var peaks = waveformCurrentPeaks;
-    if (!peaks || !peaks.length || !cw) return;
+    if (!peaks || !peaks.length) return;
+    var stripWidth = waveformEl.getBoundingClientRect().width;
+    if (!stripWidth) return;
+    waveformHalfWidth = stripWidth / 2;
+    waveformScale = stripWidth / 20; // px CSS / seconde (fenetre de reference 20s)
+
+    var pps = waveformCurrentPPS || waveformPeaksPerSecond;
+    var cssHeight = waveformEl.clientHeight || 40;
+    var cssWidth = Math.max(1, Math.ceil((peaks.length / pps) * waveformScale));
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    if (cssWidth * dpr > WAVEFORM_MAX_PX_WIDTH) dpr = WAVEFORM_MAX_PX_WIDTH / cssWidth;
+    var pxWidth = Math.max(1, Math.round(cssWidth * dpr));
+    var pxHeight = Math.max(1, Math.round(cssHeight * dpr));
+
     if (!waveformColors) {
       var cs = getComputedStyle(document.documentElement);
       waveformColors = {
         played: (cs.getPropertyValue("--accent") || "#4fc3f7").trim(),
-        upcoming: "rgba(139, 149, 161, 0.4)",
+        upcoming: "rgba(139, 149, 161, 0.55)",
       };
     }
-    var pps = waveformCurrentPPS || waveformPeaksPerSecond;
-    var pos = player.relPosition();
-    var windowSec = 20, half = windowSec / 2;
-    var t0 = pos - half, t1 = pos + half;
-    var pxPerSec = cw / windowSec;
-    var barW = Math.max(1, (pxPerSec / pps) * 0.7);
-    var midY = ch / 2;
-    var maxBarH = ch * 0.86;
-    var startIdx = Math.max(0, Math.floor(t0 * pps));
-    var endIdx = Math.min(peaks.length - 1, Math.ceil(t1 * pps));
-    var splitIdx = Math.floor(pos * pps);
 
-    function addBar(i) {
-      var peakTime = i / pps;
-      var x = (peakTime - t0) * pxPerSec;
-      var barH = Math.max(1, Math.min(1, peaks[i] * 1.15) * maxBarH);
-      g.rect(x - barW / 2, midY - barH / 2, barW, barH);
-    }
-    g.fillStyle = waveformColors.played;
-    g.beginPath();
-    for (var i = startIdx; i <= Math.min(endIdx, splitIdx); i++) addBar(i);
-    g.fill();
-    g.fillStyle = waveformColors.upcoming;
-    g.beginPath();
-    for (var j = Math.max(startIdx, splitIdx + 1); j <= endIdx; j++) addBar(j);
-    g.fill();
+    var barW = Math.max(1, (pxWidth / peaks.length) * 0.7);
+    var midY = pxHeight / 2;
+    var maxBarH = pxHeight * 0.86;
 
-    // Degrade gauche/droite peint directement sur le bitmap (destination-out
-    // = efface l'alpha existant) au lieu d'un mask-image CSS, recalcule par
-    // le compositeur a chaque frame tant que le canvas change.
-    var fadeW = cw * 0.16;
-    g.globalCompositeOperation = "destination-out";
-    var gradL = g.createLinearGradient(0, 0, fadeW, 0);
-    gradL.addColorStop(0, "rgba(0,0,0,1)");
-    gradL.addColorStop(1, "rgba(0,0,0,0)");
-    g.fillStyle = gradL;
-    g.fillRect(0, 0, fadeW, ch);
-    var gradR = g.createLinearGradient(cw - fadeW, 0, cw, 0);
-    gradR.addColorStop(0, "rgba(0,0,0,0)");
-    gradR.addColorStop(1, "rgba(0,0,0,1)");
-    g.fillStyle = gradR;
-    g.fillRect(cw - fadeW, 0, fadeW, ch);
-    g.globalCompositeOperation = "source-over";
+    [
+      { canvas: waveformCanvasAccent, color: waveformColors.played },
+      { canvas: waveformCanvasGray, color: waveformColors.upcoming },
+    ].forEach(function (layer) {
+      var canvas = layer.canvas;
+      canvas.width = pxWidth;
+      canvas.height = pxHeight;
+      canvas.style.width = cssWidth + "px";
+      canvas.style.height = cssHeight + "px";
+      var g = canvas.getContext("2d");
+      g.clearRect(0, 0, pxWidth, pxHeight);
+      g.fillStyle = layer.color;
+      g.beginPath();
+      for (var i = 0; i < peaks.length; i++) {
+        var x = (i / peaks.length) * pxWidth;
+        var barH = Math.max(1, Math.min(1, peaks[i] * 1.15) * maxBarH);
+        g.rect(x - barW / 2, midY - barH / 2, barW, barH);
+      }
+      g.fill();
+    });
   }
 
-  // ~30fps suffit largement pour un defilement de ce type et coute deux fois
-  // moins cher qu'a la frequence native de l'ecran (60-120Hz).
-  var waveformLastDraw = 0;
-  function waveformTick(ts) {
-    if (!waveformLastDraw || ts - waveformLastDraw >= 33) {
-      waveformLastDraw = ts;
-      drawWaveformFrame();
-    }
+  // Seule fonction appelee a chaque frame pendant la lecture : deux
+  // affectations de style (transform), rien d'autre. C'est ce qui rend le
+  // defilement fluide, y compris sur mobile bas de gamme.
+  function updateWaveformScroll() {
+    if (!lyricsSection.classList.contains("fullscreen")) return;
+    if (!waveformCurrentPeaks || !waveformCurrentPeaks.length || !waveformScale) return;
+    var x = player.relPosition() * waveformScale;
+    waveformCanvasAccent.style.transform = "translateX(" + (waveformHalfWidth - x) + "px)";
+    waveformCanvasGray.style.transform = "translateX(" + -x + "px)";
+  }
+
+  function waveformTick() {
+    updateWaveformScroll();
     waveformRAF = requestAnimationFrame(waveformTick);
   }
   function startWaveformLoop() {
     if (waveformRAF) return;
-    waveformLastDraw = 0;
     waveformRAF = requestAnimationFrame(waveformTick);
   }
   function stopWaveformLoop() {
     if (waveformRAF) { cancelAnimationFrame(waveformRAF); waveformRAF = null; }
   }
   window.addEventListener("resize", function () {
-    if (lyricsSection.classList.contains("fullscreen")) { ensureCanvasSize(); drawWaveformFrame(); }
+    if (lyricsSection.classList.contains("fullscreen")) { buildWaveformBitmaps(); updateWaveformScroll(); }
   });
 
   // Le spectre se deplace au doigt : on tire le ruban, la cue ne bouge pas.
@@ -482,9 +473,8 @@
   var waveformDrag = null;
   if (waveformEl) {
     waveformEl.addEventListener("pointerdown", function (ev) {
-      if (!waveformCurrentPeaks) return;
-      var rect = waveformCanvas.getBoundingClientRect();
-      waveformDrag = { startX: ev.clientX, startPos: player.relPosition(), cssPxPerSec: rect.width / 20 };
+      if (!waveformCurrentPeaks || !waveformScale) return;
+      waveformDrag = { startX: ev.clientX, startPos: player.relPosition() };
       if (waveformEl.setPointerCapture) { try { waveformEl.setPointerCapture(ev.pointerId); } catch (e) {} }
       ev.preventDefault();
     });
@@ -492,10 +482,10 @@
       if (!waveformDrag) return;
       var dx = ev.clientX - waveformDrag.startX;
       var dur = player.relDuration();
-      var next = waveformDrag.startPos - dx / waveformDrag.cssPxPerSec;
+      var next = waveformDrag.startPos - dx / waveformScale;
       next = Math.max(0, isFinite(dur) ? Math.min(dur, next) : next);
       player.seekRelative(next);
-      drawWaveformFrame();
+      updateWaveformScroll();
     });
     var endWaveformDrag = function () { waveformDrag = null; };
     waveformEl.addEventListener("pointerup", endWaveformDrag);
@@ -509,9 +499,8 @@
     if (miniBtn) miniBtn.setAttribute("aria-label", on ? "Revenir a la liste des titres" : "Plein ecran");
     if (on) syncLyrics(player.relPosition(), true);
     if (on) {
-      ensureCanvasSize();
       loadWaveform(currentTrackRef);
-      if (player.isPlaying()) startWaveformLoop(); else drawWaveformFrame();
+      if (player.isPlaying()) startWaveformLoop(); else updateWaveformScroll();
     } else {
       stopWaveformLoop();
     }
@@ -572,7 +561,7 @@
     document.body.classList.toggle("is-playing", e.playing);
     if (lyricsSection.classList.contains("fullscreen")) {
       if (e.playing) startWaveformLoop();
-      else { stopWaveformLoop(); drawWaveformFrame(); }
+      else { stopWaveformLoop(); updateWaveformScroll(); }
     }
   });
 
@@ -588,7 +577,7 @@
     syncLyrics(pos, false);
     // La boucle rAF redessine deja pendant la lecture ; ici on ne rattrape
     // que les cas ou elle est arretee (pause, seek manuel).
-    if (!waveformRAF) drawWaveformFrame();
+    if (!waveformRAF) updateWaveformScroll();
   });
 
   player.on("loaded", function (e) {

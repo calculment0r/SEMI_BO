@@ -282,16 +282,23 @@ body.is-playing .track.current .track-eq i { animation: eq 0.95s ease-in-out inf
 }
 
 /* Spectre defilant façon SoundCloud : fenetre de 20s centree sur la cue fixe
-   (barre rouge). Le degrade gauche/droite est peint dans le canvas lui-meme
-   (voir drawWaveformFrame) plutot qu'un mask-image CSS, plus couteux a
-   recalculer pendant que le contenu change a chaque frame. Le spectre
-   defile ; la cue ne bouge jamais. */
+   (barre rouge). Le spectre entier de la piste est dessine UNE FOIS (deux
+   copies : deja joue / a venir), puis on ne fait plus que deplacer ces deux
+   bitmaps via transform (translateX) a chaque frame — anime par le
+   compositeur, sans redessiner le moindre pixel pendant la lecture. Chaque
+   moitie (.waveform-half-*) affiche la meme piste, decalee exactement d'une
+   demi-largeur, et masque tout ce qui deborde de son cote de la cue. */
 .waveform {
   position: relative; height: 40px; margin-top: 14px; overflow: hidden;
   touch-action: none; cursor: grab;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
 }
 .waveform:active { cursor: grabbing; }
-.waveform-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.waveform-half { position: absolute; top: 0; bottom: 0; width: 50%; overflow: hidden; }
+.waveform-half-left { left: 0; }
+.waveform-half-right { left: 50%; }
+.waveform-canvas { position: absolute; top: 0; left: 0; display: block; }
 .waveform-cue {
   position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px;
   background: var(--cue); box-shadow: 0 0 8px rgba(255, 59, 48, 0.65); z-index: 2;
