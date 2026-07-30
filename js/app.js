@@ -196,7 +196,6 @@
   var currentLyrics = { synced: false, lines: [] };
   var lineEls = [];
   var activeLine = -1;
-  var userScrollUntil = 0;
   var currentTrackRef = null;
 
   function parseLyrics(raw) {
@@ -230,18 +229,9 @@
     if (hasCredits) { lyricsCredits.textContent = track.credits; lyricsCredits.hidden = false; }
     else lyricsCredits.hidden = true;
 
-    currentLyrics.lines.forEach(function (line, i) {
+    currentLyrics.lines.forEach(function (line) {
       var d = el("div", "lyric-line", line.text || " ");
       d.setAttribute("role", "listitem");
-      if (currentLyrics.synced) {
-        d.classList.add("seekable");
-        // Double-clic/double-tap expres : un simple clic doit rester un
-        // geste de lecture/scroll normal, pas deplacer la tete de lecture.
-        d.addEventListener("dblclick", function () {
-          player.seekRelative(line.t);
-          if (!player.isPlaying()) player.play();
-        });
-      }
       lyricsBox.appendChild(d);
       lineEls.push(d);
     });
@@ -282,16 +272,16 @@
     node.classList.toggle("waiting", gap > 6 && into > 3.5 && toNext > 2);
   }
 
+  // La ligne active se cale plus haut (32% au lieu du centre) qu'un simple
+  // centrage : sinon, sur une phrase longue (ou avec la ligne "near"
+  // suivante), le bas du texte se retrouve sous le panel du lecteur fixe en
+  // bas de l'ecran.
   function autoScrollTo(node) {
-    if (Date.now() < userScrollUntil) return;
     var box = lyricsBox;
-    var target = node.offsetTop - box.clientHeight / 2 + node.clientHeight / 2;
+    var target = node.offsetTop - box.clientHeight * 0.32 + node.clientHeight / 2;
     if (reduceMotion || typeof box.scrollTo !== "function") box.scrollTop = target;
     else box.scrollTo({ top: target, behavior: "smooth" });
   }
-
-  lyricsBox.addEventListener("wheel", function () { userScrollUntil = Date.now() + 4000; });
-  lyricsBox.addEventListener("touchmove", function () { userScrollUntil = Date.now() + 4000; });
 
   // ------------------------------------------------------- Spectre (header)
   // Fenetre glissante de 20s (10 avant / 10 apres la position courante),
