@@ -126,50 +126,52 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 .tracks-count { font-family: var(--font-mono); font-size: 0.7rem; color: var(--faint); }
 
 .tracklist { list-style: none; margin: 0; padding: 4px 0 0; }
-.track { border-bottom: 1px solid var(--border); animation: fade-up 0.6s var(--ease) both; }
+.track { animation: fade-up 0.6s var(--ease) both; }
+.track:not(:last-child) { margin-bottom: 14px; }
 .track:nth-child(2) { animation-delay: 0.06s; }
 .track:nth-child(3) { animation-delay: 0.12s; }
 .track:nth-child(4) { animation-delay: 0.18s; }
 
 .track-btn {
-  position: relative; display: flex; flex-direction: column; gap: 12px;
-  width: 100%; padding: 14px 10px 16px;
+  position: relative; display: block; width: 100%; padding: 0;
   background: transparent; border: 0; text-align: left; color: var(--text);
 }
 
-/* Le nudge hover/current vit sur .track-top (transform), jamais sur le
-   padding de .track-btn : .track-scene doit garder une boite parente stable
-   pour que son calcul de bord a bord (calc(100% + 64px)) reste juste. */
-.track-top { display: flex; align-items: center; gap: 16px; min-height: 30px; transition: transform 0.25s var(--ease); }
-.track-btn:hover .track-top { transform: translateX(6px); }
-.track.current .track-btn .track-top { transform: translateX(6px); }
-
-/* Vignette panoramique de la piste, sous le titre : bord a bord (comme la
-   pochette), la hauteur vient du ratio panoramique de l'image, pas d'une
-   valeur fixe arbitraire. Compense le padding de .track-btn (10px) ET celui
-   de .page (22px) pour atteindre le vrai bord de l'ecran. */
-.track-scene {
-  width: calc(100% + 64px); margin: 0 -32px; aspect-ratio: 21 / 9; overflow: hidden;
+/* Carte bord a bord (comme la pochette) : titre et duree incrustes sur
+   l'image plutot qu'au-dessus, pour ne pas allonger la liste pour rien.
+   La hauteur vient du ratio panoramique de l'image (21:9). Compense le
+   padding de .page (22px) pour atteindre le vrai bord de l'ecran. */
+.track-card {
+  position: relative; width: calc(100% + 44px); margin: 0 -22px; aspect-ratio: 21 / 9; overflow: hidden;
   background-color: var(--surface-2);
-  background-repeat: no-repeat; background-size: cover; background-position: center;
   outline: 1px solid var(--border); outline-offset: -1px;
   transition: outline-color 0.2s;
 }
-.track.current .track-scene { outline: 2px solid var(--accent); outline-offset: -2px; }
+.track.current .track-card { outline: 2px solid var(--accent); outline-offset: -2px; }
 
-.track-num { flex: 0 0 30px; font-family: var(--font-mono); font-size: 0.82rem; color: var(--faint); transition: color 0.2s; }
+.track-scene {
+  position: absolute; inset: 0;
+  background-repeat: no-repeat; background-size: cover; background-position: center;
+}
+.track-scrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(5, 7, 10, 0) 35%, rgba(5, 7, 10, 0.55) 68%, rgba(5, 7, 10, 0.92) 100%);
+}
+
+.track-info { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 14px 12px; }
+.track-info-top { display: flex; align-items: center; gap: 10px; margin-bottom: 3px; }
+.track-num {
+  font-family: var(--font-mono); font-size: 0.76rem; color: rgba(242, 244, 246, 0.62); transition: color 0.2s;
+}
 .track.current .track-num { color: var(--accent); }
-
-.track-main { flex: 1 1 auto; min-width: 0; }
+.track-dur { margin-left: auto; font-family: var(--font-mono); font-size: 0.76rem; color: rgba(242, 244, 246, 0.78); }
 .track-title {
-  font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; letter-spacing: -0.01em;
-  line-height: 1.15; transition: color 0.2s;
+  margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; letter-spacing: -0.01em;
+  line-height: 1.16; color: var(--text); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55); transition: color 0.2s;
 }
 .track.current .track-title { color: var(--accent); }
 
-.track-dur { flex: 0 0 auto; font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
-
-.track-eq { flex: 0 0 auto; display: none; align-items: flex-end; gap: 3px; height: 18px; width: 20px; }
+.track-eq { display: none; align-items: flex-end; gap: 3px; height: 16px; width: 18px; margin-left: auto; }
 body.is-playing .track.current .track-eq { display: flex; }
 body.is-playing .track.current .track-dur { display: none; }
 .track-eq i { flex: 1; background: var(--accent); height: 30%; border-radius: 1px; }
@@ -407,5 +409,5 @@ body.is-playing .btn-play .btn-play-ring { animation: ring 2.6s var(--ease) infi
   .album { flex-direction: row; align-items: flex-end; gap: 34px; }
   .cover-frame { width: 300px; margin: 0; flex: 0 0 auto; }
   .album-meta { flex: 1 1 auto; }
-  .track-scene { width: auto; margin: 0; border-radius: 10px; }
+  .track-card { width: auto; margin: 0; border-radius: 10px; }
 }

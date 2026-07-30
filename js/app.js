@@ -131,10 +131,20 @@
       btn.type = "button";
       btn.setAttribute("aria-label", "Lire " + (t.title || "morceau " + (i + 1)));
 
-      var top = el("div", "track-top");
+      // Carte : image pleine largeur, numero/titre/duree incrustes dessus
+      // (pas au-dessus) pour ne pas allonger la liste pour rien.
+      var card = el("div", "track-card");
+      if (t.scene) {
+        var scene = el("div", "track-scene");
+        scene.style.backgroundImage = "url('" + t.scene + "')";
+        scene.setAttribute("aria-hidden", "true");
+        card.appendChild(scene);
+      }
+      card.appendChild(el("div", "track-scrim"));
+
+      var info = el("div", "track-info");
+      var infoTop = el("div", "track-info-top");
       var num = el("span", "track-num mono", ("0" + (t.number != null ? t.number : i + 1)).slice(-2));
-      var main = el("div", "track-main");
-      main.appendChild(el("div", "track-title", t.title || "Sans titre"));
       var eq = el("span", "track-eq"); eq.setAttribute("aria-hidden", "true");
       eq.innerHTML = "<i></i><i></i><i></i>";
       var dur = el("span", "track-dur");
@@ -144,18 +154,13 @@
       else if (typeof t.start === "number" && typeof t.end === "number") d = t.end - t.start;
       dur.textContent = d != null ? formatTime(d) : "";
 
-      top.appendChild(num);
-      top.appendChild(main);
-      top.appendChild(eq);
-      top.appendChild(dur);
-      btn.appendChild(top);
-
-      if (t.scene) {
-        var scene = el("div", "track-scene");
-        scene.style.backgroundImage = "url('" + t.scene + "')";
-        scene.setAttribute("aria-hidden", "true");
-        btn.appendChild(scene);
-      }
+      infoTop.appendChild(num);
+      infoTop.appendChild(eq);
+      infoTop.appendChild(dur);
+      info.appendChild(infoTop);
+      info.appendChild(el("div", "track-title", t.title || "Sans titre"));
+      card.appendChild(info);
+      btn.appendChild(card);
 
       btn.addEventListener("click", function () { player.select(i); });
       li.appendChild(btn);
