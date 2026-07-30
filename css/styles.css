@@ -259,7 +259,8 @@ body.is-playing .track.current .track-eq i { animation: eq 0.95s ease-in-out inf
 .lyrics-banner { display: none; }
 .lyrics-section.fullscreen .lyrics-banner {
   display: block; position: relative; z-index: 1; flex: 0 0 auto;
-  height: 34vh; min-height: 200px; max-height: 320px;
+  /* reduit de 30% (etait 34vh / 200-320px) pour laisser plus de place aux paroles */
+  height: 23.8vh; min-height: 140px; max-height: 224px;
   margin: calc(-1 * max(26px, env(safe-area-inset-top))) -24px 18px;
   overflow: hidden; border-bottom: 1px solid var(--border);
 }
@@ -300,7 +301,11 @@ body.is-playing .track.current .track-eq i { animation: eq 0.95s ease-in-out inf
 .waveform-half { position: absolute; top: 0; bottom: 0; width: 50%; overflow: hidden; }
 .waveform-half-left { left: 0; }
 .waveform-half-right { left: 50%; }
-.waveform-canvas { position: absolute; top: 0; left: 0; display: block; }
+/* Lisse les irregularites entre deux appels JS (drag notamment, ou les
+   evenements pointermove n'arrivent pas a intervalles parfaitement reguliers)
+   — sans cette transition, translateX() saute d'une valeur a l'autre au lieu
+   de glisser, ce qui se voit surtout pendant le glisser-deposer. */
+.waveform-canvas { position: absolute; top: 0; left: 0; display: block; transition: transform 0.1s linear; }
 .waveform-cue {
   position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px;
   background: var(--cue); box-shadow: 0 0 8px rgba(255, 59, 48, 0.65); z-index: 2;
@@ -323,13 +328,7 @@ body.lyrics-locked { overflow: hidden; }
 }
 @keyframes player-in { from { transform: translateY(100%); } to { transform: none; } }
 
-.player-brand {
-  margin: 0; padding: 7px 0 0; text-align: center;
-  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.32em;
-  text-transform: uppercase; color: var(--faint);
-}
-
-.seek { position: relative; height: 16px; margin-top: -7px; touch-action: none; cursor: pointer; }
+.seek { position: relative; height: 16px; touch-action: none; cursor: pointer; }
 .seek-track { position: absolute; left: 0; right: 0; top: 7px; height: 3px; background: var(--border); }
 .seek-fill {
   position: absolute; left: 0; top: 7px; height: 3px; width: 0;
@@ -343,7 +342,7 @@ body.lyrics-locked { overflow: hidden; }
 .seek:hover .seek-knob, .seek:focus-visible .seek-knob { transform: translate(-50%, -50%) scale(1); }
 .seek:hover .seek-fill, .seek:hover .seek-track { height: 5px; }
 
-.player-body { max-width: 640px; margin: 0 auto; padding: 8px 16px 12px; display: flex; align-items: center; gap: 12px; }
+.player-body { max-width: 640px; margin: 0 auto; padding: 6px 16px; display: flex; align-items: center; gap: 12px; }
 
 .mini-cover {
   flex: 0 0 auto; width: 50px; height: 50px; padding: 0; border: 1px solid var(--border);

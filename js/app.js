@@ -78,8 +78,6 @@
   document.title = (data.title || "Album") + (data.artist ? " — " + data.artist : "");
   $("year").textContent = data.year || "";
   $("description").textContent = data.description || "";
-  var playerBrand = $("player-brand");
-  if (playerBrand) playerBrand.textContent = data.title || "";
 
   (function renderLinks() {
     var wrap = $("links"), links = data.links || {};
