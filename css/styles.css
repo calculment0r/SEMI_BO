@@ -88,9 +88,12 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 }
 
 /* --------------------------------------------------------------------- Page */
-/* Juste la marge de securite (encoche/ile dynamique), plus de bandeau vide
-   decoratif au-dessus de la pochette. */
-.page { max-width: 640px; margin: 0 auto; padding: max(8px, env(safe-area-inset-top)) 22px calc(var(--player-h) + 44px); }
+/* Pas de padding-top du tout : la pochette (bord a bord) va jusqu'au vrai
+   bord haut de l'ecran, meme sous l'encoche/l'ile dynamique — sinon cet
+   espace reserve affiche le fond ambiant assombri, qui rend comme une
+   bande noire. Seul le texte incruste (#cover-meta) reste protege de
+   l'encoche via son propre padding. */
+.page { max-width: 640px; margin: 0 auto; padding: 0 22px calc(var(--player-h) + 44px); }
 .player-spacer { height: 4px; }
 
 /* ------------------------------------------------------------------- Header */
@@ -107,7 +110,7 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 /* Artiste + annee incrustes en tout petit en haut de la pochette (au lieu
    d'un bloc texte separe en dessous). */
 .cover-meta {
-  position: absolute; top: 12px; left: 16px; right: 16px; z-index: 1; margin: 0;
+  position: absolute; top: max(12px, env(safe-area-inset-top)); left: 16px; right: 16px; z-index: 1; margin: 0;
   font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.24em; text-transform: uppercase;
   color: rgba(242, 244, 246, 0.88); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
 }
@@ -128,7 +131,6 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 
 .tracklist { list-style: none; margin: 0; padding: 4px 0 0; }
 .track { animation: fade-up 0.6s var(--ease) both; }
-.track:not(:last-child) { margin-bottom: 14px; }
 .track:nth-child(2) { animation-delay: 0.06s; }
 .track:nth-child(3) { animation-delay: 0.12s; }
 .track:nth-child(4) { animation-delay: 0.18s; }
@@ -142,11 +144,12 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
    l'image plutot qu'au-dessus, pour ne pas allonger la liste pour rien.
    La hauteur vient du ratio panoramique de l'image, recadre a 21:6 (etait
    21:9, -33% de hauteur -> des lignes plus fines). Compense le padding de
-   .page (22px) pour atteindre le vrai bord de l'ecran. */
+   .page (22px) pour atteindre le vrai bord de l'ecran. Aucun espace entre
+   les cartes : un trait blanc fin (outline) les separe a la place. */
 .track-card {
   position: relative; width: calc(100% + 44px); margin: 0 -22px; aspect-ratio: 21 / 6; overflow: hidden;
   background-color: var(--surface-2);
-  outline: 1px solid var(--border); outline-offset: -1px;
+  outline: 1px solid rgba(255, 255, 255, 0.9); outline-offset: -1px;
   transition: outline-color 0.2s;
 }
 .track.current .track-card { outline: 2px solid var(--accent); outline-offset: -2px; }
@@ -166,7 +169,7 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
   font-family: var(--font-mono); font-size: 0.76rem; color: rgba(242, 244, 246, 0.62); transition: color 0.2s;
 }
 .track.current .track-num { color: var(--accent); }
-.track-dur { margin-left: auto; font-family: var(--font-mono); font-size: 0.76rem; color: rgba(242, 244, 246, 0.78); }
+.track-dur { margin-left: auto; font-family: var(--font-mono); font-size: 1rem; color: rgba(242, 244, 246, 0.85); }
 .track-title {
   margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; letter-spacing: -0.01em;
   line-height: 1.16; color: var(--text); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55); transition: color 0.2s;
