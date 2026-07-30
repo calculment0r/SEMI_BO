@@ -209,10 +209,13 @@ body.is-playing .track.current .track-eq i { animation: eq 0.95s ease-in-out inf
 .lyrics-box {
   position: relative; z-index: 1;
   /* overflow-y: hidden (pas auto) : on perd le fil a faire defiler les
-     paroles a la main. Seul le defilement automatique (scrollTo en JS)
-     positionne la ligne active — le geste manuel est desactive. */
+     paroles a la main. Seul le defilement automatique (JS, anime a la main
+     en rAF - voir autoScrollTo) positionne la ligne active — le geste manuel
+     est desactive. Pas de scroll-behavior:smooth ici : l'anim est deja geree
+     image par image cote JS, l'ajouter en CSS ferait doublon et re-attenue
+     chaque micro-ecriture de scrollTop. */
   max-height: 46vh; overflow-y: hidden; padding: 12px 2px;
-  scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
+  -webkit-overflow-scrolling: touch;
   -webkit-mask-image: linear-gradient(180deg, transparent, #000 14%, #000 86%, transparent);
           mask-image: linear-gradient(180deg, transparent, #000 14%, #000 86%, transparent);
 }

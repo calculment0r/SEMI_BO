@@ -281,11 +281,34 @@
   // centrage : sinon, sur une phrase longue (ou avec la ligne "near"
   // suivante), le bas du texte se retrouve sous le panel du lecteur fixe en
   // bas de l'ecran.
+  //
+  // L'animation est faite main (rAF), PAS via scrollTo({behavior:"smooth"}) :
+  // sur les paroles synchro, les lignes s'enchainent parfois plus vite que la
+  // duree du smooth-scroll natif, donc un nouvel appel interrompt souvent le
+  // precedent. Certains navigateurs relancent alors l'anim depuis une position
+  // de depart perimee au lieu de la position reellement affichee, ce qui se
+  // voit comme un retour en arriere avant de repartir vers la ligne suivante.
+  // En pilotant scrollTop nous-memes a chaque frame, un nouvel appel repart
+  // toujours de la position ACTUELLEMENT affichee : aucune interruption
+  // possible.
+  var lyricScrollRAF = null;
   function autoScrollTo(node) {
     var box = lyricsBox;
     var target = node.offsetTop - box.clientHeight * 0.32 + node.clientHeight / 2;
-    if (reduceMotion || typeof box.scrollTo !== "function") box.scrollTop = target;
-    else box.scrollTo({ top: target, behavior: "smooth" });
+    if (lyricScrollRAF) { cancelAnimationFrame(lyricScrollRAF); lyricScrollRAF = null; }
+    if (reduceMotion || typeof requestAnimationFrame !== "function") { box.scrollTop = target; return; }
+    var from = box.scrollTop;
+    var delta = target - from;
+    if (Math.abs(delta) < 0.5) return;
+    var duration = 420, startTime = null;
+    function ease(p) { return 1 - Math.pow(1 - p, 3); }
+    function step(ts) {
+      if (startTime === null) startTime = ts;
+      var p = Math.min(1, (ts - startTime) / duration);
+      box.scrollTop = from + delta * ease(p);
+      lyricScrollRAF = p < 1 ? requestAnimationFrame(step) : null;
+    }
+    lyricScrollRAF = requestAnimationFrame(step);
   }
 
   // ------------------------------------------------------- Spectre (header)
