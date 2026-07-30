@@ -41,20 +41,15 @@
             width="1200"
             height="1200"
           />
+          <p id="cover-meta" class="cover-meta"></p>
         </div>
         <div class="album-meta">
-          <p id="artist" class="artist"></p>
-          <p id="year" class="year"></p>
           <p id="description" class="description"></p>
           <nav id="links" class="links" aria-label="Liens externes"></nav>
         </div>
       </header>
 
       <section class="tracks" aria-label="Morceaux">
-        <div class="tracks-head">
-          <span class="tracks-title">Titres</span>
-          <span id="tracks-count" class="tracks-count"></span>
-        </div>
         <ol id="tracklist" class="tracklist"></ol>
       </section>
 
@@ -75,18 +70,6 @@
               <div class="waveform-cue"></div>
             </div>
           </div>
-        </div>
-        <div id="lyrics-head" class="lyrics-head">
-          <p id="lyrics-toggle" class="lyrics-toggle">Paroles</p>
-          <button
-            id="lyrics-fullscreen"
-            class="lyrics-fs"
-            type="button"
-            aria-label="Paroles en plein ecran"
-            hidden
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
-          </button>
         </div>
         <div id="lyrics-body" class="lyrics-body">
           <div id="lyrics-bg" class="lyrics-bg" aria-hidden="true"></div>

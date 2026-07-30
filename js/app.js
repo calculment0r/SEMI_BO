@@ -74,21 +74,34 @@
   var miniCover = $("mini-cover");
   if (miniCover) miniCover.src = data.artwork512 || data.cover || "";
 
-  $("artist").textContent = data.artist || "";
   document.title = (data.title || "Album") + (data.artist ? " — " + data.artist : "");
-  $("year").textContent = data.year || "";
-  $("description").textContent = data.description || "";
+  // Artiste + annee incrustes en petit en haut de la pochette (plus de bloc
+  // texte separe en dessous) pour ne pas allonger la home pour rien.
+  var coverMeta = $("cover-meta");
+  if (coverMeta) coverMeta.textContent = [data.artist, data.year].filter(Boolean).join(" · ");
 
+  var descEl = $("description");
+  descEl.textContent = data.description || "";
+  descEl.hidden = !data.description;
+
+  var linksEl = $("links");
+  var anyLinks = false;
   (function renderLinks() {
-    var wrap = $("links"), links = data.links || {};
+    var links = data.links || {};
     var labels = { soundcloud: "SoundCloud", bandcamp: "Bandcamp", instagram: "Instagram", website: "Site" };
     Object.keys(labels).forEach(function (key) {
       if (!links[key]) return;
+      anyLinks = true;
       var a = el("a", "link", labels[key]);
       a.href = links[key]; a.target = "_blank"; a.rel = "noopener noreferrer";
-      wrap.appendChild(a);
+      linksEl.appendChild(a);
     });
   })();
+  linksEl.hidden = !anyLinks;
+  // Le conteneur lui-meme n'a pas a reserver d'espace (gap du flex parent)
+  // quand description et liens sont tous les deux vides.
+  var albumMetaEl = document.querySelector(".album-meta");
+  if (albumMetaEl) albumMetaEl.hidden = !data.description && !anyLinks;
 
   // ---------------------------------------------------------------- Scene (fond cinema)
   // Deux calques superposes pour un fondu enchaine ; chacun pan lentement sur
@@ -121,8 +134,6 @@
   var trackEls = [];
   (function renderTracks() {
     var list = $("tracklist");
-    var count = $("tracks-count");
-    if (count) count.textContent = ("0" + data.tracks.length).slice(-2) + " titres";
     data.tracks.forEach(function (t, i) {
       var li = el("li", "track");
       var btn = el("button", "track-btn");
@@ -169,8 +180,6 @@
 
   // ---------------------------------------------------------------- Lyrics
   var lyricsSection = $("lyrics-section");
-  var lyricsHead = $("lyrics-head");
-  var lyricsFsBtn = $("lyrics-fullscreen");
   var lyricsBody = $("lyrics-body");
   var lyricsCredits = $("lyrics-credits");
   var lyricsBox = $("lyrics-box");
@@ -218,14 +227,10 @@
   function loadLyrics(track) {
     currentLyrics = parseLyrics(track && track.lyrics);
     activeLine = -1; lineEls = []; lyricsBox.innerHTML = "";
-    var hasLyrics = currentLyrics.lines.length > 0;
     var hasCredits = track && track.credits;
     // La section reste toujours accessible en plein ecran (bandeau + fond
-    // panoramiques valables meme sans paroles) ; seule la ligne "PAROLES"
-    // (inline et plein ecran) se masque quand il n'y a rien a lire.
+    // panoramiques valables meme sans paroles).
     lyricsSection.hidden = false;
-    lyricsHead.hidden = !(hasLyrics || hasCredits);
-    lyricsFsBtn.hidden = !hasLyrics;
     if (hasCredits) { lyricsCredits.textContent = track.credits; lyricsCredits.hidden = false; }
     else lyricsCredits.hidden = true;
 
@@ -488,7 +493,6 @@
   function toggleFullscreen(on) {
     lyricsSection.classList.toggle("fullscreen", on);
     document.body.classList.toggle("lyrics-locked", on);
-    lyricsFsBtn.setAttribute("aria-label", on ? "Quitter le plein ecran" : "Paroles en plein ecran");
     if (miniBtn) miniBtn.setAttribute("aria-label", on ? "Revenir a la liste des titres" : "Plein ecran");
     if (on) syncLyrics(player.relPosition(), true);
     if (on) {
@@ -498,9 +502,6 @@
       stopWaveformLoop();
     }
   }
-  lyricsFsBtn.addEventListener("click", function () {
-    toggleFullscreen(!lyricsSection.classList.contains("fullscreen"));
-  });
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape" && lyricsSection.classList.contains("fullscreen")) toggleFullscreen(false);
   });

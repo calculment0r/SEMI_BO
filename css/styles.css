@@ -88,11 +88,13 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 }
 
 /* --------------------------------------------------------------------- Page */
-.page { max-width: 640px; margin: 0 auto; padding: 26px 22px calc(var(--player-h) + 44px); }
+/* Juste la marge de securite (encoche/ile dynamique), plus de bandeau vide
+   decoratif au-dessus de la pochette. */
+.page { max-width: 640px; margin: 0 auto; padding: max(8px, env(safe-area-inset-top)) 22px calc(var(--player-h) + 44px); }
 .player-spacer { height: 4px; }
 
 /* ------------------------------------------------------------------- Header */
-.album { display: flex; flex-direction: column; gap: 22px; margin-bottom: 40px; }
+.album { display: flex; flex-direction: column; gap: 16px; margin-bottom: 18px; }
 
 /* Bord a bord : deborde du padding lateral de .page, pas de cadre/radius. */
 .cover-frame {
@@ -102,11 +104,16 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 .cover { width: 100%; height: 100%; object-fit: cover; display: block; }
 @keyframes cover-in { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: none; } }
 
+/* Artiste + annee incrustes en tout petit en haut de la pochette (au lieu
+   d'un bloc texte separe en dessous). */
+.cover-meta {
+  position: absolute; top: 12px; left: 16px; right: 16px; z-index: 1; margin: 0;
+  font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.24em; text-transform: uppercase;
+  color: rgba(242, 244, 246, 0.88); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+}
+
 .album-meta { animation: fade-up 0.9s var(--ease) 0.12s both; }
 @keyframes fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-
-.artist { margin: 14px 0 0; font-family: var(--font-mono); font-size: 0.9rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); }
-.year { margin: 8px 0 0; font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.14em; color: var(--muted); }
 .description { margin: 16px 0 0; max-width: 46ch; color: var(--muted); font-size: 0.96rem; line-height: 1.6; }
 .links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
 .link {
@@ -118,12 +125,6 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 .link:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
 
 /* --------------------------------------------------------------- Tracklist */
-.tracks-head {
-  display: flex; align-items: baseline; justify-content: space-between;
-  padding: 0 2px 12px; border-bottom: 1px solid var(--border);
-}
-.tracks-title { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
-.tracks-count { font-family: var(--font-mono); font-size: 0.7rem; color: var(--faint); }
 
 .tracklist { list-style: none; margin: 0; padding: 4px 0 0; }
 .track { animation: fade-up 0.6s var(--ease) both; }
@@ -139,10 +140,11 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 
 /* Carte bord a bord (comme la pochette) : titre et duree incrustes sur
    l'image plutot qu'au-dessus, pour ne pas allonger la liste pour rien.
-   La hauteur vient du ratio panoramique de l'image (21:9). Compense le
-   padding de .page (22px) pour atteindre le vrai bord de l'ecran. */
+   La hauteur vient du ratio panoramique de l'image, recadre a 21:6 (etait
+   21:9, -33% de hauteur -> des lignes plus fines). Compense le padding de
+   .page (22px) pour atteindre le vrai bord de l'ecran. */
 .track-card {
-  position: relative; width: calc(100% + 44px); margin: 0 -22px; aspect-ratio: 21 / 9; overflow: hidden;
+  position: relative; width: calc(100% + 44px); margin: 0 -22px; aspect-ratio: 21 / 6; overflow: hidden;
   background-color: var(--surface-2);
   outline: 1px solid var(--border); outline-offset: -1px;
   transition: outline-color 0.2s;
@@ -182,20 +184,6 @@ body.is-playing .track.current .track-eq i { animation: eq 0.95s ease-in-out inf
 
 /* ----------------------------------------------------------------- Lyrics */
 .lyrics-section { margin-top: 34px; }
-.lyrics-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.lyrics-toggle {
-  margin: 0; display: inline-flex; align-items: center; gap: 10px; padding: 8px 0;
-  font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
-}
-.lyrics-fs {
-  background: transparent; border: 1px solid var(--border); border-radius: 12px; width: 42px; height: 42px;
-  display: inline-flex; align-items: center; justify-content: center; color: var(--muted);
-  transition: color 0.2s, border-color 0.2s, transform 0.15s;
-}
-.lyrics-fs:hover { color: var(--accent); border-color: var(--accent); }
-.lyrics-fs:active { transform: scale(0.94); }
-.lyrics-fs svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
 .lyrics-body { position: relative; margin-top: 16px; animation: fade-up 0.4s var(--ease) both; }
 .lyrics-credits { position: relative; z-index: 1; margin: 0 0 14px; color: var(--muted); font-size: 0.85rem; font-style: italic; }
 
@@ -313,7 +301,6 @@ body.is-playing .track.current .track-eq i { animation: eq 0.95s ease-in-out inf
   background: var(--cue); box-shadow: 0 0 8px rgba(255, 59, 48, 0.65); z-index: 2;
 }
 
-.lyrics-section.fullscreen .lyrics-head { flex: 0 0 auto; position: relative; z-index: 1; }
 .lyrics-section.fullscreen .lyrics-body { flex: 1; min-height: 0; display: flex; flex-direction: column; margin-top: 10px; position: relative; z-index: 1; }
 .lyrics-section.fullscreen .lyrics-box { max-height: none; flex: 1; display: block; text-align: center; padding-top: 26vh; padding-bottom: 26vh; }
 .lyrics-section.fullscreen .lyric-line { font-size: clamp(1.7rem, 7vw, 2.6rem); font-weight: 800; padding: 16px 8px; transform-origin: center; }
