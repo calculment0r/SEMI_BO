@@ -167,7 +167,6 @@
   // ---------------------------------------------------------------- Lyrics
   var lyricsSection = $("lyrics-section");
   var lyricsHead = $("lyrics-head");
-  var lyricsToggle = $("lyrics-toggle");
   var lyricsFsBtn = $("lyrics-fullscreen");
   var lyricsBody = $("lyrics-body");
   var lyricsCredits = $("lyrics-credits");
@@ -190,7 +189,6 @@
     if (lyricsBannerTrack) lyricsBannerTrack.textContent = (track && track.title) || "";
   }
 
-  var lyricsOpen = false;
   var currentLyrics = { synced: false, lines: [] };
   var lineEls = [];
   var activeLine = -1;
@@ -243,18 +241,11 @@
       lyricsBox.appendChild(d);
       lineEls.push(d);
     });
-    if (lyricsOpen) syncLyrics(player.relPosition(), true);
-  }
-
-  function setLyricsOpen(open) {
-    lyricsOpen = open;
-    lyricsBody.hidden = !open;
-    lyricsToggle.setAttribute("aria-expanded", open ? "true" : "false");
-    if (open) syncLyrics(player.relPosition(), true);
+    syncLyrics(player.relPosition(), true);
   }
 
   function syncLyrics(position, force) {
-    if (!currentLyrics.synced || !lyricsOpen || lineEls.length === 0) return;
+    if (!currentLyrics.synced || lineEls.length === 0) return;
     var lines = currentLyrics.lines;
     var idx = -1;
     for (var i = 0; i < lines.length; i++) {
@@ -297,7 +288,6 @@
 
   lyricsBox.addEventListener("wheel", function () { userScrollUntil = Date.now() + 4000; });
   lyricsBox.addEventListener("touchmove", function () { userScrollUntil = Date.now() + 4000; });
-  lyricsToggle.addEventListener("click", function () { setLyricsOpen(!lyricsOpen); });
 
   // ------------------------------------------------------- Spectre (header)
   // Fenetre glissante de 20s (10 avant / 10 apres la position courante)
@@ -363,7 +353,9 @@
   function ensureCanvasSize() {
     if (!waveformCanvas) return;
     var rect = waveformCanvas.getBoundingClientRect();
-    var dpr = window.devicePixelRatio || 1;
+    // Plafonne le DPR : au-dela de 2x, invisible sur ce petit bandeau mais
+    // ca double/triple le nombre de pixels a remplir a chaque frame.
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
     var w = Math.max(1, Math.round(rect.width * dpr));
     var h = Math.max(1, Math.round(rect.height * dpr));
     if (waveformCanvas.width !== w || waveformCanvas.height !== h) {
@@ -372,6 +364,10 @@
     }
   }
 
+  // Dessine tout le "passe" en un seul chemin/fill, puis tout "l'a-venir" en
+  // un seul autre : deux changements de fillStyle et deux fill() par frame
+  // au lieu d'un fillRect individuel (avec son propre changement de style)
+  // par barre — c'etait la principale source de rame sur mobile.
   function drawWaveformFrame() {
     if (!waveformCanvas || !lyricsSection.classList.contains("fullscreen")) return;
     var g = waveformCanvas.getContext("2d");
@@ -396,21 +392,54 @@
     var maxBarH = ch * 0.86;
     var startIdx = Math.max(0, Math.floor(t0 * waveformPeaksPerSecond));
     var endIdx = Math.min(peaks.length - 1, Math.ceil(t1 * waveformPeaksPerSecond));
-    for (var i = startIdx; i <= endIdx; i++) {
+    var splitIdx = Math.floor(pos * waveformPeaksPerSecond);
+
+    function addBar(i) {
       var peakTime = i / waveformPeaksPerSecond;
       var x = (peakTime - t0) * pxPerSec;
       var barH = Math.max(1, Math.min(1, peaks[i] * 1.15) * maxBarH);
-      g.fillStyle = peakTime <= pos ? waveformColors.played : waveformColors.upcoming;
-      g.fillRect(x - barW / 2, midY - barH / 2, barW, barH);
+      g.rect(x - barW / 2, midY - barH / 2, barW, barH);
     }
+    g.fillStyle = waveformColors.played;
+    g.beginPath();
+    for (var i = startIdx; i <= Math.min(endIdx, splitIdx); i++) addBar(i);
+    g.fill();
+    g.fillStyle = waveformColors.upcoming;
+    g.beginPath();
+    for (var j = Math.max(startIdx, splitIdx + 1); j <= endIdx; j++) addBar(j);
+    g.fill();
+
+    // Degrade gauche/droite peint directement sur le bitmap (destination-out
+    // = efface l'alpha existant) au lieu d'un mask-image CSS, recalcule par
+    // le compositeur a chaque frame tant que le canvas change.
+    var fadeW = cw * 0.16;
+    g.globalCompositeOperation = "destination-out";
+    var gradL = g.createLinearGradient(0, 0, fadeW, 0);
+    gradL.addColorStop(0, "rgba(0,0,0,1)");
+    gradL.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = gradL;
+    g.fillRect(0, 0, fadeW, ch);
+    var gradR = g.createLinearGradient(cw - fadeW, 0, cw, 0);
+    gradR.addColorStop(0, "rgba(0,0,0,0)");
+    gradR.addColorStop(1, "rgba(0,0,0,1)");
+    g.fillStyle = gradR;
+    g.fillRect(cw - fadeW, 0, fadeW, ch);
+    g.globalCompositeOperation = "source-over";
   }
 
-  function waveformTick() {
-    drawWaveformFrame();
+  // ~30fps suffit largement pour un defilement de ce type et coute deux fois
+  // moins cher qu'a la frequence native de l'ecran (60-120Hz).
+  var waveformLastDraw = 0;
+  function waveformTick(ts) {
+    if (!waveformLastDraw || ts - waveformLastDraw >= 33) {
+      waveformLastDraw = ts;
+      drawWaveformFrame();
+    }
     waveformRAF = requestAnimationFrame(waveformTick);
   }
   function startWaveformLoop() {
     if (waveformRAF) return;
+    waveformLastDraw = 0;
     waveformRAF = requestAnimationFrame(waveformTick);
   }
   function stopWaveformLoop() {
@@ -451,7 +480,6 @@
     document.body.classList.toggle("lyrics-locked", on);
     lyricsFsBtn.setAttribute("aria-label", on ? "Quitter le plein ecran" : "Paroles en plein ecran");
     if (miniBtn) miniBtn.setAttribute("aria-label", on ? "Revenir a la liste des titres" : "Plein ecran");
-    if (on && !lyricsOpen) setLyricsOpen(true);
     if (on) syncLyrics(player.relPosition(), true);
     if (on) {
       ensureCanvasSize();
@@ -531,7 +559,9 @@
     timeCurrent.textContent = formatTime(pos);
     timeDuration.textContent = formatTime(dur);
     syncLyrics(pos, false);
-    drawWaveformFrame();
+    // La boucle rAF redessine deja pendant la lecture ; ici on ne rattrape
+    // que les cas ou elle est arretee (pause, seek manuel).
+    if (!waveformRAF) drawWaveformFrame();
   });
 
   player.on("loaded", function (e) {
