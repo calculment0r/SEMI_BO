@@ -145,14 +145,16 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
    La hauteur vient du ratio panoramique de l'image, recadre a 21:6 (etait
    21:9, -33% de hauteur -> des lignes plus fines). Compense le padding de
    .page (22px) pour atteindre le vrai bord de l'ecran. Aucun espace entre
-   les cartes : un trait blanc fin (outline) les separe a la place. */
+   les cartes : un trait blanc simple (border, pas outline) les separe.
+   outline + outline-offset negatif rendait une bande grise trouble sur
+   Safari iOS (deux outlines adjacents mal alignees en sous-pixel) ; un
+   border-bottom classique est beaucoup plus fiable entre navigateurs. */
 .track-card {
   position: relative; width: calc(100% + 44px); margin: 0 -22px; aspect-ratio: 21 / 6; overflow: hidden;
   background-color: var(--surface-2);
-  outline: 1px solid rgba(255, 255, 255, 0.9); outline-offset: -1px;
-  transition: outline-color 0.2s;
+  border-bottom: 1px solid #fff;
 }
-.track.current .track-card { outline: 2px solid var(--accent); outline-offset: -2px; }
+.track.current .track-card { box-shadow: inset 0 0 0 2px var(--accent); }
 
 .track-scene {
   position: absolute; inset: 0;
@@ -294,11 +296,14 @@ body.is-playing .track.current .track-eq i { animation: eq 0.95s ease-in-out inf
 .waveform-half { position: absolute; top: 0; bottom: 0; width: 50%; overflow: hidden; }
 .waveform-half-left { left: 0; }
 .waveform-half-right { left: 50%; }
-/* Lisse les irregularites entre deux appels JS (drag notamment, ou les
-   evenements pointermove n'arrivent pas a intervalles parfaitement reguliers)
-   — sans cette transition, translateX() saute d'une valeur a l'autre au lieu
-   de glisser, ce qui se voit surtout pendant le glisser-deposer. */
+/* Lisse le defilement pendant la LECTURE (petits pas reguliers a chaque
+   frame). Coupee pendant le glisser-depose (.waveform-dragging) : sinon,
+   sur un glisser rapide qui saute une grande distance, le canvas reste en
+   retard sur sa cible pendant la transition et peut afficher une zone hors
+   des barres dessinees (effet "bout de spectre qui disparait"). Au doigt,
+   la position doit suivre exactement, sans latence. */
 .waveform-canvas { position: absolute; top: 0; left: 0; display: block; transition: transform 0.1s linear; }
+.waveform-dragging .waveform-canvas { transition: none; }
 .waveform-cue {
   position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px;
   background: var(--cue); box-shadow: 0 0 8px rgba(255, 59, 48, 0.65); z-index: 2;

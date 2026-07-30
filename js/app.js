@@ -473,6 +473,7 @@
     waveformEl.addEventListener("pointerdown", function (ev) {
       if (!waveformCurrentPeaks || !waveformScale) return;
       waveformDrag = { startX: ev.clientX, startPos: player.relPosition() };
+      waveformEl.classList.add("waveform-dragging");
       if (waveformEl.setPointerCapture) { try { waveformEl.setPointerCapture(ev.pointerId); } catch (e) {} }
       ev.preventDefault();
     });
@@ -485,7 +486,7 @@
       player.seekRelative(next);
       updateWaveformScroll();
     });
-    var endWaveformDrag = function () { waveformDrag = null; };
+    var endWaveformDrag = function () { waveformDrag = null; waveformEl.classList.remove("waveform-dragging"); };
     waveformEl.addEventListener("pointerup", endWaveformDrag);
     waveformEl.addEventListener("pointercancel", endWaveformDrag);
   }
