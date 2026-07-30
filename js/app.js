@@ -465,16 +465,23 @@
   // Seule fonction appelee a chaque frame pendant la lecture : deux
   // affectations de style (transform), rien d'autre. C'est ce qui rend le
   // defilement fluide, y compris sur mobile bas de gamme.
-  function updateWaveformScroll() {
+  // pos optionnel : position a afficher (utilise pendant le drag, voir plus
+  // bas) ; sans argument, on prend la position reelle de lecture.
+  function updateWaveformScroll(pos) {
     if (!lyricsSection.classList.contains("fullscreen")) return;
     if (!waveformCurrentPeaks || !waveformCurrentPeaks.length || !waveformScale) return;
-    var x = player.relPosition() * waveformScale;
+    var p = typeof pos === "number" ? pos : player.relPosition();
+    var x = p * waveformScale;
     waveformCanvasAccent.style.transform = "translateX(" + (waveformHalfWidth - x) + "px)";
     waveformCanvasGray.style.transform = "translateX(" + -x + "px)";
   }
 
   function waveformTick() {
-    updateWaveformScroll();
+    // Pendant un drag, c'est la boucle de drag (plus bas) qui pilote deja
+    // l'affichage a la position de prevvisualisation : on ne doit pas
+    // ecraser ca avec la position reelle de lecture (pas encore a jour tant
+    // que le seek n'a pas ete commis).
+    if (!waveformDrag) updateWaveformScroll();
     waveformRAF = requestAnimationFrame(waveformTick);
   }
   function startWaveformLoop() {
@@ -491,13 +498,33 @@
   // Le spectre se deplace au doigt : on tire le ruban, la cue ne bouge pas.
   // Glisser vers la droite fait apparaitre le passe (rewind), vers la
   // gauche l'a-venir (avance) — comme si on tirait une bande physique.
+  //
+  // player.seekRelative() ecrit audio.currentTime, une vraie recherche au
+  // niveau du decodeur — pas gratuite. pointermove peut se declencher tres
+  // frequemment au doigt (jusqu'a plus de 60 fois/seconde sur certains
+  // mobiles) : appeler un vrai seek a CHAQUE evenement crée a la fois des
+  // saccades pendant le drag (le decodeur n'arrive pas a suivre) et une
+  // grosse survonsommation batterie. On separe donc l'affichage (suit le
+  // doigt a chaque evenement, pas cher : juste un transform) du seek reel,
+  // qui n'est commis qu'une fois par frame via rAF.
   var waveformDrag = null;
+  var waveformDragRAF = null;
+  function waveformDragTick() {
+    if (!waveformDrag) { waveformDragRAF = null; return; }
+    if (waveformDrag.pendingPos !== waveformDrag.committedPos) {
+      waveformDrag.committedPos = waveformDrag.pendingPos;
+      player.seekRelative(waveformDrag.pendingPos);
+    }
+    waveformDragRAF = requestAnimationFrame(waveformDragTick);
+  }
   if (waveformEl) {
     waveformEl.addEventListener("pointerdown", function (ev) {
       if (!waveformCurrentPeaks || !waveformScale) return;
-      waveformDrag = { startX: ev.clientX, startPos: player.relPosition() };
+      var startPos = player.relPosition();
+      waveformDrag = { startX: ev.clientX, startPos: startPos, pendingPos: startPos, committedPos: startPos };
       waveformEl.classList.add("waveform-dragging");
       if (waveformEl.setPointerCapture) { try { waveformEl.setPointerCapture(ev.pointerId); } catch (e) {} }
+      if (!waveformDragRAF) waveformDragRAF = requestAnimationFrame(waveformDragTick);
       ev.preventDefault();
     });
     waveformEl.addEventListener("pointermove", function (ev) {
@@ -506,10 +533,17 @@
       var dur = player.relDuration();
       var next = waveformDrag.startPos - dx / waveformScale;
       next = Math.max(0, isFinite(dur) ? Math.min(dur, next) : next);
-      player.seekRelative(next);
-      updateWaveformScroll();
+      waveformDrag.pendingPos = next;
+      updateWaveformScroll(next);
     });
-    var endWaveformDrag = function () { waveformDrag = null; waveformEl.classList.remove("waveform-dragging"); };
+    var endWaveformDrag = function () {
+      if (waveformDrag && waveformDrag.pendingPos !== waveformDrag.committedPos) {
+        player.seekRelative(waveformDrag.pendingPos);
+      }
+      waveformDrag = null;
+      if (waveformDragRAF) { cancelAnimationFrame(waveformDragRAF); waveformDragRAF = null; }
+      waveformEl.classList.remove("waveform-dragging");
+    };
     waveformEl.addEventListener("pointerup", endWaveformDrag);
     waveformEl.addEventListener("pointercancel", endWaveformDrag);
   }
