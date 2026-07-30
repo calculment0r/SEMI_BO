@@ -159,6 +159,18 @@
   var lyricsBody = $("lyrics-body");
   var lyricsCredits = $("lyrics-credits");
   var lyricsBox = $("lyrics-box");
+  var lyricsBannerImg = $("lyrics-banner-img");
+  var lyricsBannerArtist = $("lyrics-banner-artist");
+  var lyricsBannerTrack = $("lyrics-banner-track");
+
+  // Bandeau panoramique du plein ecran : image de la piste + titre.
+  function updateLyricsBanner(track) {
+    if (lyricsBannerImg && track && track.scene) {
+      lyricsBannerImg.style.backgroundImage = "url('" + track.scene + "')";
+    }
+    if (lyricsBannerArtist) lyricsBannerArtist.textContent = data.artist || "";
+    if (lyricsBannerTrack) lyricsBannerTrack.textContent = (track && track.title) || "";
+  }
 
   var lyricsOpen = false;
   var currentLyrics = { synced: false, lines: [] };
@@ -199,7 +211,9 @@
       d.setAttribute("role", "listitem");
       if (currentLyrics.synced) {
         d.classList.add("seekable");
-        d.addEventListener("click", function () {
+        // Double-clic/double-tap expres : un simple clic doit rester un
+        // geste de lecture/scroll normal, pas deplacer la tete de lecture.
+        d.addEventListener("dblclick", function () {
           player.seekRelative(line.t);
           if (!player.isPlaying()) player.play();
         });
@@ -277,13 +291,12 @@
     if (e.key === "Escape" && lyricsSection.classList.contains("fullscreen")) toggleFullscreen(false);
   });
 
-  // Vignette du lecteur -> ouvre les paroles (et defile jusqu'a elles).
+  // Vignette du lecteur -> plein ecran direct (bandeau + paroles).
   var miniBtn = $("mini-cover-btn");
   if (miniBtn) {
     miniBtn.addEventListener("click", function () {
       if (lyricsSection.hidden) return;
-      if (!lyricsOpen) setLyricsOpen(true);
-      lyricsSection.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+      toggleFullscreen(true);
     });
   }
 
@@ -307,10 +320,11 @@
       if (active) ref.btn.setAttribute("aria-current", "true");
       else ref.btn.removeAttribute("aria-current");
     });
-    // Chacun dans son try/catch : une erreur dans l'un (paroles) ne doit
-    // jamais empecher l'autre (scene) de s'appliquer, et inversement.
+    // Chacun dans son try/catch : une erreur dans l'un ne doit jamais
+    // empecher les autres de s'appliquer.
     try { loadLyrics(t); } catch (err) { console.error("[app] loadLyrics:", err); }
     try { setScene(t.scene); } catch (err) { console.error("[app] setScene:", err); }
+    try { updateLyricsBanner(t); } catch (err) { console.error("[app] updateLyricsBanner:", err); }
   });
 
   player.on("playstate", function (e) {

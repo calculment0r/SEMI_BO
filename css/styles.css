@@ -207,7 +207,7 @@ body.is-playing .track.current .track-eq i { animation: eq 0.95s ease-in-out inf
   transition: color 0.4s var(--ease), opacity 0.4s var(--ease), transform 0.4s var(--ease), filter 0.4s var(--ease);
   transform-origin: left center;
 }
-.lyric-line.seekable { cursor: pointer; }
+.lyric-line.seekable { cursor: pointer; touch-action: manipulation; }
 .lyric-line.near { opacity: 0.6; }
 .lyric-line.active {
   color: var(--text); opacity: 1;
@@ -230,12 +230,42 @@ body.is-playing .track.current .track-eq i { animation: eq 0.95s ease-in-out inf
 }
 .lyrics-section.fullscreen::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(120% 60% at 50% 50%, transparent 45%, rgba(0,0,0,0.6) 100%);
+  background: radial-gradient(120% 60% at 50% -10%, transparent 45%, rgba(0,0,0,0.6) 100%);
 }
 @keyframes fs-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* Bandeau panoramique : image de la piste en cours + titre, uniquement en
+   plein ecran (dans la page normale, la pochette + le fond ambiant suffisent). */
+.lyrics-banner { display: none; }
+.lyrics-section.fullscreen .lyrics-banner {
+  display: block; position: relative; z-index: 1; flex: 0 0 auto;
+  height: 34vh; min-height: 200px; max-height: 320px;
+  margin: calc(-1 * max(26px, env(safe-area-inset-top))) -24px 18px;
+  overflow: hidden; border-bottom: 1px solid var(--border);
+}
+.lyrics-banner-img {
+  position: absolute; inset: 0;
+  background-repeat: no-repeat; background-position: 0% 50%; background-size: auto 100%;
+  filter: saturate(1.1) brightness(0.85) contrast(1.05);
+  animation: scene-pan 24s ease-in-out infinite alternate;
+}
+.lyrics-banner-scrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(5,7,10,0.05) 0%, rgba(5,7,10,0.25) 60%, var(--bg) 100%);
+}
+.lyrics-banner-title { position: absolute; left: 24px; right: 24px; bottom: 16px; }
+.lyrics-banner-artist {
+  margin: 0 0 4px; font-family: var(--font-mono); font-size: 0.68rem;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent);
+}
+.lyrics-banner-track {
+  margin: 0; font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(1.5rem, 6.4vw, 2.3rem); letter-spacing: -0.02em; line-height: 1.05;
+}
+
 .lyrics-section.fullscreen .lyrics-head { flex: 0 0 auto; position: relative; z-index: 1; }
 .lyrics-section.fullscreen .lyrics-body { flex: 1; min-height: 0; display: flex; flex-direction: column; margin-top: 10px; position: relative; z-index: 1; }
-.lyrics-section.fullscreen .lyrics-box { max-height: none; flex: 1; display: block; text-align: center; padding-top: 38vh; padding-bottom: 38vh; }
+.lyrics-section.fullscreen .lyrics-box { max-height: none; flex: 1; display: block; text-align: center; padding-top: 26vh; padding-bottom: 26vh; }
 .lyrics-section.fullscreen .lyric-line { font-size: clamp(1.7rem, 7vw, 2.6rem); font-weight: 800; padding: 16px 8px; transform-origin: center; }
 .lyrics-section.fullscreen .lyric-line.active { transform: scale(1.04); }
 body.lyrics-locked { overflow: hidden; }
