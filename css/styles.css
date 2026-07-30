@@ -66,7 +66,7 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
   opacity: 0;
   filter: saturate(1.05) brightness(0.5) contrast(1.05);
   transition: opacity 1.4s var(--ease);
-  animation: scene-pan 46s linear infinite alternate;
+  animation: scene-pan 24s ease-in-out infinite alternate;
   animation-play-state: paused;
 }
 .scene-layer.on { opacity: 1; animation-play-state: running; }
