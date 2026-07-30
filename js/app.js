@@ -307,8 +307,10 @@
       if (active) ref.btn.setAttribute("aria-current", "true");
       else ref.btn.removeAttribute("aria-current");
     });
-    loadLyrics(t);
-    setScene(t.scene);
+    // Chacun dans son try/catch : une erreur dans l'un (paroles) ne doit
+    // jamais empecher l'autre (scene) de s'appliquer, et inversement.
+    try { loadLyrics(t); } catch (err) { console.error("[app] loadLyrics:", err); }
+    try { setScene(t.scene); } catch (err) { console.error("[app] setScene:", err); }
   });
 
   player.on("playstate", function (e) {
@@ -402,6 +404,17 @@
   refreshVolumeUI();
 
   if ("serviceWorker" in navigator) {
+    // Recharge une fois quand une nouvelle version du service worker prend
+    // la main, pour ne jamais rester coince sur une interface en cache
+    // pendant qu'on itere sur le site (album-data.js etc. suivent deja une
+    // strategie reseau-d'abord, mais le fichier service-worker.js lui-meme
+    // peut mettre un moment a etre redetecte par le navigateur).
+    var reloadedForUpdate = false;
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (reloadedForUpdate) return;
+      reloadedForUpdate = true;
+      window.location.reload();
+    });
     window.addEventListener("load", function () {
       navigator.serviceWorker.register("./service-worker.js").catch(function () {});
     });
