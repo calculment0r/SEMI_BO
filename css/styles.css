@@ -64,7 +64,7 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
   background-position: 0% 50%;
   background-size: auto 100%;
   opacity: 0;
-  filter: saturate(1.05) brightness(0.5) contrast(1.05);
+  filter: saturate(1.1) brightness(0.72) contrast(1.05);
   transition: opacity 1.4s var(--ease);
   animation: scene-pan 24s ease-in-out infinite alternate;
   animation-play-state: paused;
@@ -77,7 +77,7 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 .scene-scrim {
   position: absolute; inset: 0;
   background:
-    linear-gradient(180deg, rgba(5,7,10,0.62) 0%, rgba(5,7,10,0.32) 26%, rgba(5,7,10,0.4) 60%, var(--bg) 100%);
+    linear-gradient(180deg, rgba(5,7,10,0.5) 0%, rgba(5,7,10,0.2) 26%, rgba(5,7,10,0.3) 60%, var(--bg) 100%);
 }
 .scene::after {
   content: ""; position: absolute; inset: 0;

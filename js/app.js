@@ -34,6 +34,29 @@
   }
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  // Garde --player-h synchronise avec la vraie hauteur du lecteur fixe (elle
+  // varie avec env(safe-area-inset-bottom) sur iPhone a encoche / Dynamic
+  // Island). Sans ca, le bas de la page (dont les derniers titres de la
+  // liste) peut se retrouver cache sous le lecteur.
+  (function watchPlayerHeight() {
+    var playerEl = document.querySelector(".player");
+    if (!playerEl) return;
+    function sync() {
+      document.documentElement.style.setProperty("--player-h", playerEl.offsetHeight + "px");
+    }
+    sync();
+    if ("ResizeObserver" in window) {
+      // box: "border-box" est indispensable ici : la hauteur du lecteur
+      // change surtout par son padding-bottom (env(safe-area-inset-bottom)),
+      // pas par la taille de son contenu. En "content-box" (par defaut),
+      // l'observer ne se declenche pas quand seul le padding bouge.
+      new ResizeObserver(sync).observe(playerEl, { box: "border-box" });
+    } else {
+      window.addEventListener("resize", sync);
+      window.addEventListener("orientationchange", sync);
+    }
+  })();
+
   if (!data || typeof data !== "object" || !Array.isArray(data.tracks) || data.tracks.length === 0) {
     showError("Configuration de l'album invalide. Verifie js/album-data.js.");
     return;
