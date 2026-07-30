@@ -177,6 +177,7 @@
   var lyricsBannerArtist = $("lyrics-banner-artist");
   var lyricsBannerTrack = $("lyrics-banner-track");
   var lyricsBg = $("lyrics-bg");
+  var waveformCanvas = $("waveform-canvas");
 
   // Visuel de la piste courante : vignette du lecteur, bandeau + fond du
   // plein ecran. Meme image (t.scene) partout, chacun avec son propre cadrage.
@@ -194,6 +195,7 @@
   var lineEls = [];
   var activeLine = -1;
   var userScrollUntil = 0;
+  var currentTrackRef = null;
 
   function parseLyrics(raw) {
     if (typeof raw !== "string" || raw.trim() === "") return { synced: false, lines: [] };
@@ -298,6 +300,127 @@
   lyricsBox.addEventListener("touchmove", function () { userScrollUntil = Date.now() + 4000; });
   lyricsToggle.addEventListener("click", function () { setLyricsOpen(!lyricsOpen); });
 
+  // ------------------------------------------------------- Spectre (header)
+  // Fenetre glissante de 20s (10 avant / 10 apres la position courante)
+  // dessinee sur un canvas, cue rouge fixe au centre. Les pics sont extraits
+  // une fois par piste via Web Audio (decodeAudioData), en tache de fond, au
+  // moment ou le plein ecran s'ouvre — jamais pour les 7 pistes d'un coup.
+  var waveformCtx = null;
+  var waveformCache = {}; // fichier -> Float32Array de pics (max abs par tranche)
+  var waveformPeaksPerSecond = 10;
+  var waveformCurrentPeaks = null;
+  var waveformCurrentFile = null;
+  var waveformRAF = null;
+  var waveformColors = null;
+
+  function waveformAudioCtx() {
+    if (waveformCtx) return waveformCtx;
+    var Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!Ctor) return null;
+    try { waveformCtx = new Ctor(); } catch (e) { waveformCtx = null; }
+    return waveformCtx;
+  }
+
+  function extractPeaks(buffer) {
+    var ch0 = buffer.getChannelData(0);
+    var ch1 = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : null;
+    var bucket = Math.max(1, Math.round(buffer.sampleRate / waveformPeaksPerSecond));
+    var total = Math.ceil(ch0.length / bucket);
+    var peaks = new Float32Array(total);
+    for (var p = 0; p < total; p++) {
+      var start = p * bucket, end = Math.min(start + bucket, ch0.length), max = 0;
+      for (var i = start; i < end; i++) {
+        var v = ch1 ? (Math.abs(ch0[i]) + Math.abs(ch1[i])) / 2 : Math.abs(ch0[i]);
+        if (v > max) max = v;
+      }
+      peaks[p] = max;
+    }
+    return peaks;
+  }
+
+  function loadWaveform(track) {
+    var file = track && track.file;
+    waveformCurrentPeaks = null;
+    waveformCurrentFile = file || null;
+    if (!file) { drawWaveformFrame(); return; }
+    if (waveformCache[file]) {
+      waveformCurrentPeaks = waveformCache[file];
+      drawWaveformFrame();
+      return;
+    }
+    var ctx = waveformAudioCtx();
+    if (!ctx) return; // Web Audio indisponible : le spectre reste vide, la lecture n'est pas affectee
+    fetch(file)
+      .then(function (r) { return r.arrayBuffer(); })
+      .then(function (buf) { return ctx.decodeAudioData(buf); })
+      .then(function (audioBuffer) {
+        var peaks = extractPeaks(audioBuffer);
+        waveformCache[file] = peaks;
+        if (waveformCurrentFile === file) { waveformCurrentPeaks = peaks; drawWaveformFrame(); }
+      })
+      .catch(function () { /* spectre indisponible pour ce morceau : pas bloquant */ });
+  }
+
+  function ensureCanvasSize() {
+    if (!waveformCanvas) return;
+    var rect = waveformCanvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var w = Math.max(1, Math.round(rect.width * dpr));
+    var h = Math.max(1, Math.round(rect.height * dpr));
+    if (waveformCanvas.width !== w || waveformCanvas.height !== h) {
+      waveformCanvas.width = w;
+      waveformCanvas.height = h;
+    }
+  }
+
+  function drawWaveformFrame() {
+    if (!waveformCanvas || !lyricsSection.classList.contains("fullscreen")) return;
+    var g = waveformCanvas.getContext("2d");
+    if (!g) return;
+    var cw = waveformCanvas.width, ch = waveformCanvas.height;
+    g.clearRect(0, 0, cw, ch);
+    var peaks = waveformCurrentPeaks;
+    if (!peaks || !peaks.length || !cw) return;
+    if (!waveformColors) {
+      var cs = getComputedStyle(document.documentElement);
+      waveformColors = {
+        played: (cs.getPropertyValue("--accent") || "#4fc3f7").trim(),
+        upcoming: "rgba(139, 149, 161, 0.4)",
+      };
+    }
+    var pos = player.relPosition();
+    var windowSec = 20, half = windowSec / 2;
+    var t0 = pos - half, t1 = pos + half;
+    var pxPerSec = cw / windowSec;
+    var barW = Math.max(1, (pxPerSec / waveformPeaksPerSecond) * 0.7);
+    var midY = ch / 2;
+    var maxBarH = ch * 0.86;
+    var startIdx = Math.max(0, Math.floor(t0 * waveformPeaksPerSecond));
+    var endIdx = Math.min(peaks.length - 1, Math.ceil(t1 * waveformPeaksPerSecond));
+    for (var i = startIdx; i <= endIdx; i++) {
+      var peakTime = i / waveformPeaksPerSecond;
+      var x = (peakTime - t0) * pxPerSec;
+      var barH = Math.max(1, Math.min(1, peaks[i] * 1.15) * maxBarH);
+      g.fillStyle = peakTime <= pos ? waveformColors.played : waveformColors.upcoming;
+      g.fillRect(x - barW / 2, midY - barH / 2, barW, barH);
+    }
+  }
+
+  function waveformTick() {
+    drawWaveformFrame();
+    waveformRAF = requestAnimationFrame(waveformTick);
+  }
+  function startWaveformLoop() {
+    if (waveformRAF) return;
+    waveformRAF = requestAnimationFrame(waveformTick);
+  }
+  function stopWaveformLoop() {
+    if (waveformRAF) { cancelAnimationFrame(waveformRAF); waveformRAF = null; }
+  }
+  window.addEventListener("resize", function () {
+    if (lyricsSection.classList.contains("fullscreen")) { ensureCanvasSize(); drawWaveformFrame(); }
+  });
+
   function toggleFullscreen(on) {
     lyricsSection.classList.toggle("fullscreen", on);
     document.body.classList.toggle("lyrics-locked", on);
@@ -305,6 +428,13 @@
     if (miniBtn) miniBtn.setAttribute("aria-label", on ? "Revenir a la liste des titres" : "Plein ecran");
     if (on && !lyricsOpen) setLyricsOpen(true);
     if (on) syncLyrics(player.relPosition(), true);
+    if (on) {
+      ensureCanvasSize();
+      loadWaveform(currentTrackRef);
+      if (player.isPlaying()) startWaveformLoop(); else drawWaveformFrame();
+    } else {
+      stopWaveformLoop();
+    }
   }
   lyricsFsBtn.addEventListener("click", function () {
     toggleFullscreen(!lyricsSection.classList.contains("fullscreen"));
@@ -335,6 +465,7 @@
 
   player.on("trackchange", function (e) {
     var t = e.track || {};
+    currentTrackRef = t;
     npTitle.textContent = t.title || "";
     trackEls.forEach(function (ref, i) {
       var active = i === e.index;
@@ -347,12 +478,22 @@
     try { loadLyrics(t); } catch (err) { console.error("[app] loadLyrics:", err); }
     try { setScene(t.scene); } catch (err) { console.error("[app] setScene:", err); }
     try { updateTrackVisuals(t); } catch (err) { console.error("[app] updateTrackVisuals:", err); }
+    // Le spectre ne se (re)decode que si le plein ecran est deja ouvert
+    // (sinon on attend que l'utilisateur y entre pour eviter de decoder de
+    // l'audio en arriere-plan pour rien).
+    if (lyricsSection.classList.contains("fullscreen")) {
+      try { loadWaveform(t); } catch (err) { console.error("[app] loadWaveform:", err); }
+    }
   });
 
   player.on("playstate", function (e) {
     btnPlay.classList.toggle("is-playing", e.playing);
     btnPlay.setAttribute("aria-label", e.playing ? "Pause" : "Lecture");
     document.body.classList.toggle("is-playing", e.playing);
+    if (lyricsSection.classList.contains("fullscreen")) {
+      if (e.playing) startWaveformLoop();
+      else { stopWaveformLoop(); drawWaveformFrame(); }
+    }
   });
 
   player.on("time", function (e) {
@@ -365,6 +506,7 @@
     timeCurrent.textContent = formatTime(pos);
     timeDuration.textContent = formatTime(dur);
     syncLyrics(pos, false);
+    drawWaveformFrame();
   });
 
   player.on("loaded", function (e) {
