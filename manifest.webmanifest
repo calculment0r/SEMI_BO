@@ -1,0 +1,24 @@
+{
+  "name": "SEMI — album",
+  "short_name": "SEMI",
+  "description": "Ecoutez l'album SEMI depuis votre telephone ou votre ordinateur.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#05070a",
+  "theme_color": "#05070a",
+  "icons": [
+    {
+      "src": "./assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

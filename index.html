@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>SEMI — album</title>
+    <meta
+      name="description"
+      content="Ecoutez l'album SEMI depuis votre telephone ou votre ordinateur."
+    />
+    <meta name="theme-color" content="#05070a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="SEMI" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./assets/icon-192.png" />
+    <link rel="apple-touch-icon" href="./assets/icon-192.png" />
+    <link rel="stylesheet" href="./css/styles.css" />
+  </head>
+  <body>
+    <div id="error-banner" class="error-banner" role="alert" hidden></div>
+
+    <!-- Fond cinema : plan large de la piste en cours, pan lent, fondu au changement -->
+    <div class="scene" aria-hidden="true">
+      <div id="scene-a" class="scene-layer"></div>
+      <div id="scene-b" class="scene-layer"></div>
+      <div class="scene-scrim"></div>
+    </div>
+
+    <main class="page">
+      <header class="album">
+        <div class="cover-frame">
+          <img
+            id="cover"
+            class="cover"
+            src="./assets/cover-1200.jpg"
+            alt="Pochette de l'album"
+            width="1200"
+            height="1200"
+          />
+          <div class="cover-sheen" aria-hidden="true"></div>
+        </div>
+        <div class="album-meta">
+          <p id="artist" class="artist"></p>
+          <h1 id="album-title" class="album-title"></h1>
+          <p id="year" class="year"></p>
+          <p id="description" class="description"></p>
+          <nav id="links" class="links" aria-label="Liens externes"></nav>
+        </div>
+      </header>
+
+      <section class="tracks" aria-label="Morceaux">
+        <div class="tracks-head">
+          <span class="tracks-title">Titres</span>
+          <span id="tracks-count" class="tracks-count"></span>
+        </div>
+        <ol id="tracklist" class="tracklist"></ol>
+      </section>
+
+      <section id="lyrics-section" class="lyrics-section" hidden>
+        <div class="lyrics-head">
+          <button
+            id="lyrics-toggle"
+            class="lyrics-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="lyrics-body"
+          >
+            <span class="lyrics-toggle-label">Paroles</span>
+            <span id="lyrics-badge" class="lyrics-badge" hidden>synchro</span>
+            <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <button
+            id="lyrics-fullscreen"
+            class="lyrics-fs"
+            type="button"
+            aria-label="Paroles en plein ecran"
+            hidden
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+          </button>
+        </div>
+        <div id="lyrics-body" class="lyrics-body" hidden>
+          <p id="lyrics-credits" class="lyrics-credits" hidden></p>
+          <div id="lyrics-box" class="lyrics-box" role="list" aria-label="Paroles"></div>
+        </div>
+      </section>
+
+      <div class="player-spacer" aria-hidden="true"></div>
+    </main>
+
+    <footer class="player" role="region" aria-label="Lecteur audio">
+      <div
+        id="progress"
+        class="seek"
+        role="slider"
+        tabindex="0"
+        aria-label="Position dans le morceau"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+      >
+        <div class="seek-track"></div>
+        <div id="progress-fill" class="seek-fill"></div>
+        <div id="progress-knob" class="seek-knob"></div>
+      </div>
+
+      <div class="player-body">
+        <button id="mini-cover-btn" class="mini-cover" type="button" aria-label="Afficher les paroles">
+          <img id="mini-cover" src="./assets/cover-512.jpg" alt="" width="48" height="48" />
+        </button>
+
+        <div class="np">
+          <span id="np-title" class="np-title">Choisissez un morceau</span>
+          <span class="np-time">
+            <span id="time-current">0:00</span>
+            <span class="np-sep">/</span>
+            <span id="time-duration">0:00</span>
+          </span>
+        </div>
+
+        <div class="controls">
+          <button id="btn-prev" class="ctrl" type="button" aria-label="Morceau precedent">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6l-9 6 9 6zM6 6h2v12H6z"/></svg>
+          </button>
+
+          <button id="btn-play" class="ctrl btn-play" type="button" aria-label="Lecture">
+            <span class="btn-play-ring" aria-hidden="true"></span>
+            <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+            <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+          </button>
+
+          <button id="btn-next" class="ctrl" type="button" aria-label="Morceau suivant">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l9 6-9 6zM16 6h2v12h-2z"/></svg>
+          </button>
+
+          <div class="volume">
+            <button id="btn-mute" class="ctrl ctrl-sm" type="button" aria-label="Couper le son">
+              <svg class="i-vol" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 5V4L8 9z"/></svg>
+              <svg class="i-mute" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 5V4L8 9zM16 9l5 6M21 9l-5 6"/></svg>
+            </button>
+            <input id="volume" class="volume-slider" type="range" min="0" max="1" step="0.01" value="1" aria-label="Volume" />
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <audio id="audio-player" preload="metadata"></audio>
+
+    <script src="./js/album-data.js"></script>
+    <script src="./js/player.js"></script>
+    <script src="./js/app.js"></script>
+  </body>
+</html>

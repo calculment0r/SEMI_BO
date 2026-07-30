@@ -1,0 +1,6 @@
+# fichiers temporaires / outils locaux
+scratch_*.py
+scratch_*.json
+*.pcm
+.DS_Store
+node_modules/
