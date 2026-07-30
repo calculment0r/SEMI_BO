@@ -30,10 +30,9 @@
  *   "patatrac", "à corps", "Pour ce qui me choix".
  * - "Backlash" (piste 3) : mots douteux : "a whoring case".
  * - "Dance Around" (piste 7) : mots douteux : "sweet apricot".
- * - "Living Proof" (piste 6) ET "Living Proof (Live)" (piste 2) partagent le
- *   MEME texte/timing (un seul .srt fourni pour les deux versions) alors que
- *   la version live dure ~30s de plus -> le calage peut deriver vers la fin
- *   de la version live, a recaler separement si besoin.
+ * - "Living Proof" (piste 6) : .srt studio dedie.
+ * - "Living Proof (Live)" (piste 2) : .srt dedie a cette prise live (timing
+ *   different de la version studio, mots douteux : "Nora" a 1:36).
  */
 
 window.ALBUM_DATA = {
@@ -67,65 +66,62 @@ window.ALBUM_DATA = {
       scene: "./assets/scenes/scene-lighter.jpg",
       duration: 184.32,
       credits: "",
-      // Meme paroles que la version studio (piste 6) : meme chanson, timing
-      // non re-cale sur cette prise live (~30s plus longue) -> peut deriver
-      // vers la fin, a corriger a l'oreille.
+      // Timing propre a cette prise live (fichier .srt dedie, distinct de la
+      // version studio piste 6). Mot incertain de la transcription : "Nora"
+      // (1:36) -> a verifier a l'oreille, pourrait etre autre chose.
       lyrics:
-        "[00:00.20] Je vais baisser le son sans vraiment l'éteindre\n" +
-        "[00:03.60] Faut que j'entende son coeur quand même\n" +
-        "[00:06.16] C'est peut-être mieux comme ça\n" +
-        "[00:09.60] Je sais pas\n" +
-        "[00:13.48] Tu dors à moitié\n" +
-        "[00:15.05] Ta main est tombée sur moi\n" +
-        "[00:16.17] Je l'ai pas bougé, y'a un truc qui cogne dehors\n" +
-        "[00:18.76] Putain ça cogne fort\n" +
-        "[00:20.65] Ou alors c'est moi, j'suis pas sûr\n" +
-        "[00:22.33] Je tourne en rond, un soleil à faible lueur\n" +
-        "[00:24.88] On a pas bougé depuis un bail\n" +
-        "[00:26.74] C'est pas un choix, c'est juste qu'on est bien juste là\n" +
-        "[00:29.37] J'vois qu'on flotte, j'crois qu'on flotte\n" +
-        "[00:32.09] Toi tu dors à moitié, moi en horaire éclatée\n" +
-        "[00:34.82] Les semaines ont compté les heures\n" +
-        "[00:36.82] À chacun sa croix, à chacun son leurre\n" +
-        "[00:38.81] Reste encore un peu, juste le temps que\n" +
-        "[00:43.20] Non je sais pas le temps de quoi\n" +
-        "[00:46.02] T'as dit un truc dans ton sommeil\n" +
-        "[00:47.62] J'ai pas compris lequel, je l'ai gardé près de mon coeur\n" +
-        "[00:49.38] Un lapin dans les phares, foudroyé par l'erreur\n" +
-        "[00:51.13] Mais ma main a glissé sur ton ventre\n" +
-        "[00:53.14] Et j'ai pensé à tout ce qui vient\n" +
-        "[00:54.73] Un trésor pour toujours en commun\n" +
-        "[00:56.49] Et si dehors quelqu'un crie ou quelqu'un rit\n" +
-        "[00:59.06] C'est presque la même chose\n" +
-        "[01:00.74] Car tout s'embrouille, avec le temps tout rouille\n" +
-        "[01:03.61] Vas-y viens on dort\n" +
-        "[01:04.90] Tu devais aussi arrêter de fumer\n" +
-        "[01:06.42] Mais moi ce que je sais\n" +
-        "[01:07.53] C'est qu'on finit jamais rien\n" +
-        "[01:09.13] Et c'est pas grave, no, no, no, no, no\n" +
-        "[01:11.53] Tout ça flotte, putain j'crois que tout ça flotte\n" +
-        "[01:14.02] Entre ce que je promets et ce que j'arrive à faire\n" +
-        "[01:16.10] Mais en pointillé, aide-moi à retenir nos heures\n" +
-        "[01:18.73] À chacun tes choix, à chacun son coeur\n" +
-        "[01:20.73] Mais l'amour au centre ici\n" +
-        "[01:22.49] Si proche, plus tendre, reste encore un peu\n" +
-        "[01:26.01] Juste le temps que\n" +
-        "[01:28.88] Non je sais pas le temps, de quoi, quoi, quoi\n" +
-        "[01:32.58] Si demain n'arrivait plus\n" +
-        "[01:34.42] Si plus rien n'advenait\n" +
-        "[01:36.17] On se referait l'appareil\n" +
-        "[01:38.17] Le canal de l'Ourcq nous tient\n" +
-        "[01:39.77] Ta, ta, ta respiration\n" +
-        "[01:41.45] Sous la ligne de flottaison\n" +
-        "[01:43.29] Bon, bon, bon, bon, bon, bon\n" +
-        "[01:45.86] Viens on tient\n" +
-        "[01:46.81] Après nous, à tout ce qui vient\n" +
-        "[01:48.57] Ton souffle et moi, toi\n" +
-        "[01:50.26] On est pareil, presque\n" +
-        "[01:52.39] Ça gronde encore\n" +
-        "[01:53.86] Ou c'est le système qui sonde\n" +
-        "[01:55.62] J'ai pas les idées claires\n" +
-        "[01:57.30] Reste encore un peu",
+        "[00:00.09] Je veux baisser le son, sans vraiment l'éteindre\n" +
+        "[00:05.80] Faut que j'entende son coeur quand même\n" +
+        "[00:10.01] C'est peut-être mieux comme ça\n" +
+        "[00:20.00] Tu dors à moitié, ta main est tombée sur moi\n" +
+        "[00:23.09] Je l'ai pas bougé, y'a un truc qui cogne dehors\n" +
+        "[00:25.09] Putain ça cogne fort\n" +
+        "[00:27.10] Ou alors c'est moi, je suis pas sûr\n" +
+        "[00:29.09] Je tourne en rond, un soleil à faible lueur\n" +
+        "[00:31.09] On a pas bougé depuis un bail\n" +
+        "[00:33.10] C'est pas un choix, c'est juste qu'on est bien juste là\n" +
+        "[00:36.10] Je vois qu'on flotte, je crois qu'on flotte\n" +
+        "[00:38.10] Toi tu dors à moitié, moi en horaire éclatée\n" +
+        "[00:41.10] Des semaines à compter les heures\n" +
+        "[00:43.09] À chacun sa croix, à chacun son leurre\n" +
+        "[00:45.09] Reste encore un peu, juste le temps que\n" +
+        "[00:50.01] Non je sais pas le temps de quoi\n" +
+        "[01:00.00] Je sais pas le temps de quoi\n" +
+        "[01:02.09] T'as dit un truc dans ton sommeil\n" +
+        "[01:04.10] J'ai pas compris lequel, je l'ai gardé près de mon coeur\n" +
+        "[01:06.09] Un lapin dans les phares, foudroyé par la peur\n" +
+        "[01:08.09] Mais ma main a glissé sur ton ventre\n" +
+        "[01:10.10] Et j'ai pensé à tout ce qui vient\n" +
+        "[01:12.09] Un trésor pour toujours en commun\n" +
+        "[01:15.09] Et si dehors, quelqu'un crie ou quelqu'un rit\n" +
+        "[01:18.09] C'est presque la même chose\n" +
+        "[01:20.09] Car tout s'embrouille, avec le temps tout rouille\n" +
+        "[01:23.09] Vas-y viens, on dort\n" +
+        "[01:30.00] Tu peux aussi arrêter de fumer, mais moi ce que je sais\n" +
+        "[01:33.10] C'est qu'on finit jamais rien et c'est pas grave\n" +
+        "[01:36.10] Nora, tout ça flotte, putain je crois que tout ça flotte\n" +
+        "[01:39.10] Entre ce que je promets et ce que j'arrive à faire\n" +
+        "[01:41.09] Mais en pointillé, aide-moi à retenir nos heures\n" +
+        "[01:44.09] À chacun de tes choix, à chacun son coeur\n" +
+        "[01:46.09] Mets l'amour au centre, ici\n" +
+        "[01:50.00] Reste encore un peu, juste le temps que\n" +
+        "[01:53.10] Mets l'amour au centre, ici\n" +
+        "[01:55.09] Plus, reste encore un peu\n" +
+        "[01:57.09] Juste le temps que\n" +
+        "[02:00.00] Non je sais pas le temps de quoi\n" +
+        "[02:04.00] Si demain n'arrivait plus\n" +
+        "[02:07.00] On serait là, pareil\n" +
+        "[02:09.09] Canal de l'Ourcq nous tient\n" +
+        "[02:13.00] Sous la ligne de flottaison\n" +
+        "[02:16.99] Après nous\n" +
+        "[02:19.10] Ton souffle et moi à toi\n" +
+        "[02:23.00] Presque, ça gronde encore\n" +
+        "[02:25.10] Ou c'est le système qui sombre\n" +
+        "[02:27.09] J'ai pas les idées claires\n" +
+        "[02:29.09] Reste encore un peu\n" +
+        "[02:39.00] Je sais pas le temps de quoi\n" +
+        "[02:53.00] Je sais pas le temps de quoi\n" +
+        "[02:59.00] Reste encore un peu",
     },
     {
       number: 3,
