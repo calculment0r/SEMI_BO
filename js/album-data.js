@@ -631,37 +631,37 @@ window.ALBUM_DATA = {
       scene: "./assets/scenes/scene-morgue.jpg",
       duration: 185.71,
       credits: "",
-      // Fichier audio remplace le 30/07 (~4s plus court que l'original) ; le
-      // calage des paroles ci-dessous vient de l'ancien fichier et n'a pas pu
-      // etre reverifie a l'oreille sur celui-ci — a confirmer.
+      // .srt dedie fourni pour ce fichier (remplace l'estimation precedente,
+      // qui reutilisait les timestamps de l'ancien fichier audio). Le .srt
+      // s'arrete vers 2:41 (dernier bloc reel ; un bloc final parasite
+      // "www.youtube.com..." vers 3:00 a ete ignore) : la fin du morceau
+      // (~2:41 a ~3:05) est donc instrumentale ou non transcrite, pas de
+      // paroles inventees pour cette portion.
       lyrics:
-        "[00:00.42] Dance as long as you can dance, dance around the earth\n" +
-        "[00:24.96] Free as a man, one day left before the gate turns\n" +
+        "[00:00.09] Dance as long as you can dance, dance around the earth\n" +
+        "[00:24.99] Free as a man, one day left before the gate turns\n" +
         "[00:30.29] Light as the wind that dances through the jail's trees\n" +
         "[00:34.85] Or the ropes of a ring that dance beneath the blow\n" +
-        "[00:42.17] Dance as long as you can dance, on the canvas, on the tar\n" +
-        "[00:45.06] On a burnt ground, in the shadow of a master\n" +
-        "[00:50.33] Come, let yourself be carried by every kind of music\n" +
-        "[00:55.13] Rising from a speaker or a kid's playing bow\n" +
-        "[01:01.14] Dance as long as you can dance, dance around the earth\n" +
-        "[01:06.25] Dance in the arms of your mother, or Norah and Jo\n" +
-        "[01:11.45] Dance to find love again, and madness too\n" +
-        "[01:16.74] Dance to dazzle your soul, when it's bored and blue\n" +
-        "[01:22.41] Dance as long as you can dance, dance around the earth\n" +
-        "[01:48.01] So you no longer carry the count and the trials on your back\n" +
+        "[00:39.17] Dance as long as you can dance, on the canvas, on the tar\n" +
+        "[00:44.50] On the burnt ground, in the shadow of a master\n" +
+        "[00:48.71] Come, let yourself be carried by every kind of music\n" +
+        "[00:53.81] Rising from a speaker or a kid's playing bow\n" +
+        "[01:00.81] Dance as long as you can dance, dance around the earth\n" +
+        "[01:05.82] Dance in the arms of your mother, or Norah and Jo\n" +
+        "[01:10.81] Dance to find love again, and madness too\n" +
+        "[01:16.81] Dance to dazzle your soul, when it's bored and blue\n" +
+        "[01:41.72] Dance as long as you can dance, dance around the earth\n" +
+        "[01:47.82] So you no longer carry the count and the trials on your back\n" +
         "[01:50.81] And you will see in plain sight, summer burst through the light\n" +
-        "[01:53.45] Pray for torrents of joy running loose under your skin\n" +
-        "[01:58.98] Dance as long as you can dance, dance around the earth\n" +
-        "[02:04.09] Dance so a brand-new day may bloom behind the wall\n" +
-        "[02:09.37] Dance the way we fight, dance the way we love\n" +
-        "[02:14.56] Dance the way we write our names upon the walls\n" +
-        "[02:20.16] Dance as long as you can dance, dance around the earth\n" +
-        "[02:25.70] Dance as long as you can dance, come, the round is open\n" +
-        "[02:30.73] Dance as long as you can dance, dance around the earth\n" +
-        "[02:35.93] Dance as long as you can dance, come, the round is open\n" +
-        "[02:41.37] Dance as long as you can dance, dance as long as you can dance\n" +
-        "[02:45.29] Dance around the earth, dance as long as you can dance\n" +
-        "[02:49.69] Come, the round is open",
+        "[01:53.82] Pray for torrents of joy running loose under your skin\n" +
+        "[01:58.81] Dance as long as you can dance, dance around the earth\n" +
+        "[02:04.72] Dance so a brand-new day may bloom behind the wall\n" +
+        "[02:09.82] Dance the way we fight, dance the way we love\n" +
+        "[02:14.81] Dance the way we write our names upon the walls\n" +
+        "[02:19.82] Dance as long as you can dance, dance around the earth\n" +
+        "[02:25.82] Dance as long as you can dance, come, the round is open\n" +
+        "[02:30.81] Dance as long as you can dance, dance around the earth\n" +
+        "[02:35.82] Dance as long as you can dance, come, the round is open",
     },
   ],
 };
