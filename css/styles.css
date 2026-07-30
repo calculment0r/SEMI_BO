@@ -1,8 +1,9 @@
 /*
  * styles.css — SEMI
- * DA : cinema/thriller froid, teal-noir profond, accent rouge-orange, typo
+ * DA : cinema/thriller froid, teal-noir profond, accent bleu clair, typo
  * blanche grasse condensee (grotesk, esprit affiche de film). Chaque piste a
- * son plan large en fond, qui pan lentement et se fond au changement de piste.
+ * son plan large en fond/vignette, qui pan lentement et se fond au changement
+ * de piste.
  */
 
 :root {
@@ -13,10 +14,10 @@
   --text: #f2f4f6;
   --muted: #8b95a1;
   --faint: #454c55;
-  --accent: #ff4433;
-  --accent-2: #d92c1f;
+  --accent: #4fc3f7;
+  --accent-2: #1e88e5;
   --border: #1d232b;
-  --glow: rgba(255, 68, 51, 0.28);
+  --glow: rgba(79, 195, 247, 0.28);
 
   --font-display: "Helvetica Neue", Helvetica, "Arial Nova", Arial, sans-serif;
   --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -27,6 +28,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; padding: 0; }
 
 body {
@@ -91,31 +93,19 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 /* ------------------------------------------------------------------- Header */
 .album { display: flex; flex-direction: column; gap: 22px; margin-bottom: 40px; }
 
+/* Bord a bord : deborde du padding lateral de .page, pas de cadre/radius. */
 .cover-frame {
-  position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 14px; overflow: hidden;
-  border: 1px solid var(--border);
-  box-shadow: 0 30px 70px rgba(0,0,0,0.65);
+  position: relative; width: calc(100% + 44px); margin: 0 -22px; aspect-ratio: 1 / 1; overflow: hidden;
   animation: cover-in 0.9s var(--ease) both;
 }
-.cover { width: 100%; height: 100%; object-fit: cover; }
-.cover-sheen {
-  position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(120deg, transparent 32%, rgba(255,255,255,0.08) 48%, transparent 60%);
-  transform: translateX(-120%); animation: sheen 7s var(--ease) 1.4s infinite;
-}
+.cover { width: 100%; height: 100%; object-fit: cover; display: block; }
 @keyframes cover-in { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: none; } }
-@keyframes sheen { 0% { transform: translateX(-120%); } 20%, 100% { transform: translateX(120%); } }
 
 .album-meta { animation: fade-up 0.9s var(--ease) 0.12s both; }
 @keyframes fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
-.artist { margin: 0 0 10px; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); }
-.album-title {
-  margin: 0; font-family: var(--font-display); font-weight: 800;
-  font-size: clamp(3rem, 17vw, 5.2rem); line-height: 0.88; letter-spacing: -0.04em;
-  text-transform: uppercase;
-}
-.year { margin: 14px 0 0; font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.14em; color: var(--muted); }
+.artist { margin: 14px 0 0; font-family: var(--font-mono); font-size: 0.9rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); }
+.year { margin: 8px 0 0; font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.14em; color: var(--muted); }
 .description { margin: 16px 0 0; max-width: 46ch; color: var(--muted); font-size: 0.96rem; line-height: 1.6; }
 .links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
 .link {
@@ -141,13 +131,25 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 .track:nth-child(4) { animation-delay: 0.18s; }
 
 .track-btn {
-  position: relative; display: flex; align-items: center; gap: 16px;
-  width: 100%; min-height: 66px; padding: 14px 10px;
+  position: relative; display: flex; flex-direction: column; gap: 12px;
+  width: 100%; padding: 14px 10px 16px;
   background: transparent; border: 0; text-align: left; color: var(--text);
   transition: padding-left 0.25s var(--ease);
 }
 .track-btn:hover { padding-left: 16px; }
 .track.current .track-btn { padding-left: 16px; }
+
+.track-top { display: flex; align-items: center; gap: 16px; min-height: 30px; }
+
+/* Vignette panoramique de la piste, sous le titre. */
+.track-scene {
+  height: 108px; border-radius: 10px; overflow: hidden;
+  background-color: var(--surface-2);
+  background-repeat: no-repeat; background-size: cover; background-position: center;
+  outline: 1px solid var(--border); outline-offset: -1px;
+  transition: outline-color 0.2s;
+}
+.track.current .track-scene { outline: 2px solid var(--accent); outline-offset: -2px; }
 
 .track-num { flex: 0 0 30px; font-family: var(--font-mono); font-size: 0.82rem; color: var(--faint); transition: color 0.2s; }
 .track.current .track-num { color: var(--accent); }
@@ -191,10 +193,25 @@ body.is-playing .track.current .track-eq i { animation: eq 0.95s ease-in-out inf
 .lyrics-fs:active { transform: scale(0.94); }
 .lyrics-fs svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-.lyrics-body { margin-top: 16px; animation: fade-up 0.4s var(--ease) both; }
-.lyrics-credits { margin: 0 0 14px; color: var(--muted); font-size: 0.85rem; font-style: italic; }
+.lyrics-body { position: relative; margin-top: 16px; animation: fade-up 0.4s var(--ease) both; }
+.lyrics-credits { position: relative; z-index: 1; margin: 0 0 14px; color: var(--muted); font-size: 0.85rem; font-style: italic; }
+
+/* Fond pleine hauteur derriere les paroles en plein ecran : meme image que
+   le bandeau, pan lent en boucle. Absent en mode inline (juste display:none). */
+.lyrics-bg { display: none; }
+.lyrics-section.fullscreen .lyrics-bg {
+  display: block; position: absolute; inset: -16px -24px; z-index: 0;
+  background-repeat: no-repeat; background-position: 0% 50%; background-size: auto 100%;
+  filter: saturate(1.05) brightness(0.4) contrast(1.05);
+  animation: scene-pan 30s ease-in-out infinite alternate;
+}
+.lyrics-section.fullscreen .lyrics-bg::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, var(--bg) 0%, rgba(5,7,10,0.55) 12%, rgba(5,7,10,0.55) 88%, var(--bg) 100%);
+}
 
 .lyrics-box {
+  position: relative; z-index: 1;
   max-height: 46vh; overflow-y: auto; padding: 12px 2px;
   scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
   -webkit-mask-image: linear-gradient(180deg, transparent, #000 14%, #000 86%, transparent);
@@ -280,6 +297,12 @@ body.lyrics-locked { overflow: hidden; }
 }
 @keyframes player-in { from { transform: translateY(100%); } to { transform: none; } }
 
+.player-brand {
+  margin: 0; padding: 7px 0 0; text-align: center;
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.32em;
+  text-transform: uppercase; color: var(--faint);
+}
+
 .seek { position: relative; height: 16px; margin-top: -7px; touch-action: none; cursor: pointer; }
 .seek-track { position: absolute; left: 0; right: 0; top: 7px; height: 3px; background: var(--border); }
 .seek-fill {
@@ -352,13 +375,12 @@ body.is-playing .btn-play .btn-play-ring { animation: ring 2.6s var(--ease) infi
     animation-duration: 0.001ms !important; animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important; scroll-behavior: auto !important;
   }
-  .cover-sheen { display: none; }
   .scene-layer.on { opacity: 0.9; }
 }
 
 /* ---------------------------------------------------------- Larger screens */
 @media (min-width: 760px) {
   .album { flex-direction: row; align-items: flex-end; gap: 34px; }
-  .cover-frame { width: 300px; flex: 0 0 auto; }
+  .cover-frame { width: 300px; margin: 0; flex: 0 0 auto; }
   .album-meta { flex: 1 1 auto; }
 }

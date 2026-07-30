@@ -41,11 +41,9 @@
             width="1200"
             height="1200"
           />
-          <div class="cover-sheen" aria-hidden="true"></div>
         </div>
         <div class="album-meta">
           <p id="artist" class="artist"></p>
-          <h1 id="album-title" class="album-title"></h1>
           <p id="year" class="year"></p>
           <p id="description" class="description"></p>
           <nav id="links" class="links" aria-label="Liens externes"></nav>
@@ -69,7 +67,7 @@
             <h2 id="lyrics-banner-track" class="lyrics-banner-track"></h2>
           </div>
         </div>
-        <div class="lyrics-head">
+        <div id="lyrics-head" class="lyrics-head">
           <button
             id="lyrics-toggle"
             class="lyrics-toggle"
@@ -92,6 +90,7 @@
           </button>
         </div>
         <div id="lyrics-body" class="lyrics-body" hidden>
+          <div id="lyrics-bg" class="lyrics-bg" aria-hidden="true"></div>
           <p id="lyrics-credits" class="lyrics-credits" hidden></p>
           <div id="lyrics-box" class="lyrics-box" role="list" aria-label="Paroles"></div>
         </div>
@@ -101,6 +100,7 @@
     </main>
 
     <footer class="player" role="region" aria-label="Lecteur audio">
+      <p id="player-brand" class="player-brand"></p>
       <div
         id="progress"
         class="seek"
@@ -117,7 +117,7 @@
       </div>
 
       <div class="player-body">
-        <button id="mini-cover-btn" class="mini-cover" type="button" aria-label="Afficher les paroles">
+        <button id="mini-cover-btn" class="mini-cover" type="button" aria-label="Plein ecran">
           <img id="mini-cover" src="./assets/cover-512.jpg" alt="" width="48" height="48" />
         </button>
 

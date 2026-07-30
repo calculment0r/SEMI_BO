@@ -69,14 +69,17 @@
     cover.onerror = function () { cover.style.opacity = "0"; };
   }
   cover.alt = "Pochette de l'album " + (data.title || "");
+  // La vignette du lecteur (mini-cover) est mise a jour par piste dans
+  // updateTrackVisuals ; cover-512 sert juste de repli avant le 1er morceau.
   var miniCover = $("mini-cover");
   if (miniCover) miniCover.src = data.artwork512 || data.cover || "";
 
   $("artist").textContent = data.artist || "";
-  $("album-title").textContent = data.title || "Album";
   document.title = (data.title || "Album") + (data.artist ? " — " + data.artist : "");
   $("year").textContent = data.year || "";
   $("description").textContent = data.description || "";
+  var playerBrand = $("player-brand");
+  if (playerBrand) playerBrand.textContent = data.title || "";
 
   (function renderLinks() {
     var wrap = $("links"), links = data.links || {};
@@ -128,6 +131,7 @@
       btn.type = "button";
       btn.setAttribute("aria-label", "Lire " + (t.title || "morceau " + (i + 1)));
 
+      var top = el("div", "track-top");
       var num = el("span", "track-num mono", ("0" + (t.number != null ? t.number : i + 1)).slice(-2));
       var main = el("div", "track-main");
       main.appendChild(el("div", "track-title", t.title || "Sans titre"));
@@ -140,10 +144,19 @@
       else if (typeof t.start === "number" && typeof t.end === "number") d = t.end - t.start;
       dur.textContent = d != null ? formatTime(d) : "";
 
-      btn.appendChild(num);
-      btn.appendChild(main);
-      btn.appendChild(eq);
-      btn.appendChild(dur);
+      top.appendChild(num);
+      top.appendChild(main);
+      top.appendChild(eq);
+      top.appendChild(dur);
+      btn.appendChild(top);
+
+      if (t.scene) {
+        var scene = el("div", "track-scene");
+        scene.style.backgroundImage = "url('" + t.scene + "')";
+        scene.setAttribute("aria-hidden", "true");
+        btn.appendChild(scene);
+      }
+
       btn.addEventListener("click", function () { player.select(i); });
       li.appendChild(btn);
       list.appendChild(li);
@@ -153,6 +166,7 @@
 
   // ---------------------------------------------------------------- Lyrics
   var lyricsSection = $("lyrics-section");
+  var lyricsHead = $("lyrics-head");
   var lyricsToggle = $("lyrics-toggle");
   var lyricsBadge = $("lyrics-badge");
   var lyricsFsBtn = $("lyrics-fullscreen");
@@ -162,12 +176,15 @@
   var lyricsBannerImg = $("lyrics-banner-img");
   var lyricsBannerArtist = $("lyrics-banner-artist");
   var lyricsBannerTrack = $("lyrics-banner-track");
+  var lyricsBg = $("lyrics-bg");
 
-  // Bandeau panoramique du plein ecran : image de la piste + titre.
-  function updateLyricsBanner(track) {
-    if (lyricsBannerImg && track && track.scene) {
-      lyricsBannerImg.style.backgroundImage = "url('" + track.scene + "')";
-    }
+  // Visuel de la piste courante : vignette du lecteur, bandeau + fond du
+  // plein ecran. Meme image (t.scene) partout, chacun avec son propre cadrage.
+  function updateTrackVisuals(track) {
+    var url = track && track.scene;
+    if (url && miniCover) miniCover.src = url;
+    if (url && lyricsBannerImg) lyricsBannerImg.style.backgroundImage = "url('" + url + "')";
+    if (url && lyricsBg) lyricsBg.style.backgroundImage = "url('" + url + "')";
     if (lyricsBannerArtist) lyricsBannerArtist.textContent = data.artist || "";
     if (lyricsBannerTrack) lyricsBannerTrack.textContent = (track && track.title) || "";
   }
@@ -200,7 +217,11 @@
     activeLine = -1; lineEls = []; lyricsBox.innerHTML = "";
     var hasLyrics = currentLyrics.lines.length > 0;
     var hasCredits = track && track.credits;
-    lyricsSection.hidden = !(hasLyrics || hasCredits);
+    // La section reste toujours accessible en plein ecran (bandeau + fond
+    // panoramiques valables meme sans paroles) ; seule la ligne "PAROLES"
+    // (inline et plein ecran) se masque quand il n'y a rien a lire.
+    lyricsSection.hidden = false;
+    lyricsHead.hidden = !(hasLyrics || hasCredits);
     lyricsFsBtn.hidden = !hasLyrics;
     lyricsBadge.hidden = !currentLyrics.synced;
     if (hasCredits) { lyricsCredits.textContent = track.credits; lyricsCredits.hidden = false; }
@@ -281,6 +302,7 @@
     lyricsSection.classList.toggle("fullscreen", on);
     document.body.classList.toggle("lyrics-locked", on);
     lyricsFsBtn.setAttribute("aria-label", on ? "Quitter le plein ecran" : "Paroles en plein ecran");
+    if (miniBtn) miniBtn.setAttribute("aria-label", on ? "Revenir a la liste des titres" : "Plein ecran");
     if (on && !lyricsOpen) setLyricsOpen(true);
     if (on) syncLyrics(player.relPosition(), true);
   }
@@ -291,12 +313,12 @@
     if (e.key === "Escape" && lyricsSection.classList.contains("fullscreen")) toggleFullscreen(false);
   });
 
-  // Vignette du lecteur -> plein ecran direct (bandeau + paroles).
+  // Vignette du lecteur -> bascule plein ecran (bandeau + fond + paroles).
+  // Re-cliquer dessus en plein ecran revient a la liste des titres.
   var miniBtn = $("mini-cover-btn");
   if (miniBtn) {
     miniBtn.addEventListener("click", function () {
-      if (lyricsSection.hidden) return;
-      toggleFullscreen(true);
+      toggleFullscreen(!lyricsSection.classList.contains("fullscreen"));
     });
   }
 
@@ -324,7 +346,7 @@
     // empecher les autres de s'appliquer.
     try { loadLyrics(t); } catch (err) { console.error("[app] loadLyrics:", err); }
     try { setScene(t.scene); } catch (err) { console.error("[app] setScene:", err); }
-    try { updateLyricsBanner(t); } catch (err) { console.error("[app] updateLyricsBanner:", err); }
+    try { updateTrackVisuals(t); } catch (err) { console.error("[app] updateTrackVisuals:", err); }
   });
 
   player.on("playstate", function (e) {
