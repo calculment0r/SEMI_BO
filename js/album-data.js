@@ -8,16 +8,15 @@
  * fond pendant sa lecture, recadre en vertical et anime en pan lent.
  *
  * ETAT ACTUEL (provisoire, en attente de confirmation) :
- * - Pochette : reelle (pochette.png fournie).
- * - Scenes : 7 reelles sur 8, ASSOCIATION AUX PISTES NON CONFIRMEE — l'ordre
- *   ci-dessous est arbitraire (ordre d'upload), a corriger. La piste 8 utilise
- *   un placeholder en attendant le visuel manquant.
- * - Pistes 1-5 : audio reel. Titres DEDUITS DU NOM DE FICHIER (a confirmer) :
- *   halfdead -> "Half Dead", livingprooflive -> "Living Proof (Live)",
- *   backlash -> "Backlash", lasemi -> "La Semi",
- *   fastfeat.trace -> "Fast (feat. Trace)". Ordre = ordre d'upload, a corriger
- *   si ce n'est pas l'ordre voulu dans l'album.
- * - Pistes 6-8 : audio + titres PLACEHOLDERS, en attente.
+ * - Pochette et les 7 scenes : reelles.
+ * - Album a 7 titres (pas 8). Association scene <-> piste NON CONFIRMEE —
+ *   l'ordre ci-dessous est arbitraire (ordre d'upload), a corriger.
+ * - Audio reel pour les 7 pistes. Titres DEDUITS DU NOM DE FICHIER (a
+ *   confirmer) : halfdead -> "Half Dead", livingprooflive -> "Living Proof
+ *   (Live)", backlash -> "Backlash", lasemi -> "La Semi",
+ *   fastfeat.trace -> "Fast (feat. Trace)", livingproof -> "Living Proof",
+ *   dancearound -> "Dance Around". Ordre = ordre d'upload, a corriger si ce
+ *   n'est pas l'ordre voulu dans l'album.
  *
  * Paroles "lyrics" : format LRC synchronise -> [mm:ss.xx] texte (temps relatif
  * au debut du morceau). Laisser vide si pas encore disponible.
@@ -85,25 +84,19 @@ window.ALBUM_DATA = {
     },
     {
       number: 6,
-      title: "Piste 6",
-      file: "./audio/06.mp3",
+      title: "Living Proof",
+      file: "./audio/06-living-proof.mp3",
       scene: "./assets/scenes/scene-pill.jpg",
+      duration: 154.56,
       credits: "",
       lyrics: "",
     },
     {
       number: 7,
-      title: "Piste 7",
-      file: "./audio/07.mp3",
+      title: "Dance Around",
+      file: "./audio/07-dance-around.mp3",
       scene: "./assets/scenes/scene-morgue.jpg",
-      credits: "",
-      lyrics: "",
-    },
-    {
-      number: 8,
-      title: "Piste 8",
-      file: "./audio/08.mp3",
-      scene: "./assets/scenes/scene-placeholder.jpg",
+      duration: 189.6,
       credits: "",
       lyrics: "",
     },

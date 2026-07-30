@@ -11,7 +11,7 @@
  * iPhone. L'album n'est donc jamais telecharge entierement en arriere-plan.
  */
 
-var CACHE = "semi-v1";
+var CACHE = "semi-v2";
 
 var APP_SHELL = [
   "./",
@@ -32,7 +32,6 @@ var APP_SHELL = [
   "./assets/scenes/scene-booking.jpg",
   "./assets/scenes/scene-pill.jpg",
   "./assets/scenes/scene-morgue.jpg",
-  "./assets/scenes/scene-placeholder.jpg",
 ];
 
 self.addEventListener("install", function (event) {
