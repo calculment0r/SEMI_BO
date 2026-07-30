@@ -32,7 +32,11 @@
  * - "Dance Around" (piste 7) : mots douteux : "sweet apricot".
  * - "Living Proof" (piste 6) : .srt studio dedie.
  * - "Living Proof (Live)" (piste 2) : .srt dedie a cette prise live (timing
- *   different de la version studio, mots douteux : "Nora" a 1:36).
+ *   different de la version studio).
+ * - "Fast (feat. Trace)" (piste 5) : "Nora" et "Jose" apparaissent comme des
+ *   prenoms recurrents (Nora aussi presente dans Living Proof) -> a priori
+ *   de vrais prenoms du texte, pas des erreurs de transcription.
+ * - "Half Dead" (piste 1) : encore sans paroles.
  */
 
 window.ALBUM_DATA = {
@@ -327,7 +331,199 @@ window.ALBUM_DATA = {
       scene: "./assets/scenes/scene-booking.jpg",
       duration: 443.4,
       credits: "",
-      lyrics: "",
+      lyrics:
+        "[00:00.09] Cash crash, cash crash\n" +
+        "[00:04.09] Coach says I'm fast, he's right\n" +
+        "[00:06.49] Cash crash, the problem is, so is my life\n" +
+        "[00:11.09] Yeah\n" +
+        "[00:13.00] Coach says I'm fast\n" +
+        "[00:16.09] He says it like it's a good thing\n" +
+        "[00:19.09] Fast, getting off the line\n" +
+        "[00:22.10] Fast, pulling my head back\n" +
+        "[00:26.09] Fast enough to see the punch\n" +
+        "[00:29.09] Half a second before it lands\n" +
+        "[00:32.09] Half a second is a long time\n" +
+        "[00:35.09] You can close your eyes, you can change your mind\n" +
+        "[00:38.09] You can miss a call, you can lose a fight\n" +
+        "[00:41.10] I spend the whole day running\n" +
+        "[00:43.09] So I can get locked up on time\n" +
+        "[00:46.10] I think that's kinda funny\n" +
+        "[00:48.09] Well, not funny like a joke\n" +
+        "[00:50.09] Funny like when everybody spoke\n" +
+        "[00:53.10] But nobody understand anything\n" +
+        "[00:58.00] Cash crash, time throws the first punch\n" +
+        "[01:02.09] Cash crash, I'm coming right behind it\n" +
+        "[01:05.10] I move fast, I live fast\n" +
+        "[01:08.09] I move fast, I fuck you\n" +
+        "[01:10.09] But your time is already here\n" +
+        "[01:19.01] Nora asked me if I'm okay\n" +
+        "[01:22.09] I say yes, I say no\n" +
+        "[01:24.10] I'm shameless because it would take too long\n" +
+        "[01:28.09] Then she looks at me like she's waiting for the rest\n" +
+        "[01:32.09] There's always a test\n" +
+        "[01:33.09] Another session, another fav\n" +
+        "[01:35.09] Another kind suck\n" +
+        "[01:36.10] Another guy saying, standing, pretending\n" +
+        "[01:38.10] Don't worry, it'll be quick\n" +
+        "[01:39.09] Everything's quick now\n" +
+        "[01:40.09] The money, the punches, the apologies\n" +
+        "[01:43.10] Even mistakes happen before you decide to make them\n" +
+        "[01:47.09] You're right to be sorry\n" +
+        "[01:49.10] Your life will end here, my dear\n" +
+        "[01:53.00] Cash crash, time throws the first punch\n" +
+        "[01:57.10] Cash crash, I'm coming right behind it\n" +
+        "[02:00.09] I move fast, I live fast\n" +
+        "[02:03.10] I move fast, I fuck you\n" +
+        "[02:05.09] I want you to hit me as fast as you can\n" +
+        "[02:11.00] But the hour's already here\n" +
+        "[02:15.10] You're lost\n" +
+        "[02:18.00] Jose says\n" +
+        "[02:21.00] Be smart as fast as you are\n" +
+        "[02:23.09] So I think\n" +
+        "[02:25.09] Before the punch\n" +
+        "[02:26.09] Before the question\n" +
+        "[02:28.10] Before Nora notices\n" +
+        "[02:30.09] I'm checking the time again\n" +
+        "[02:33.10] I leave so early\n" +
+        "[02:36.09] Sometimes I wonder\n" +
+        "[02:39.09] If I was ever really here\n" +
+        "[02:43.00] Cash crash, cash crash\n" +
+        "[02:46.10] Everybody wants to save time\n" +
+        "[02:48.09] Cash crash\n" +
+        "[02:49.09] Nobody knows where they're going\n" +
+        "[02:51.09] I move fast\n" +
+        "[02:53.10] I think fast\n" +
+        "[02:55.09] I move fast\n" +
+        "[02:56.09] Pull guys in neutral\n" +
+        "[02:58.09] To get in\n" +
+        "[03:00.10] To get out\n" +
+        "[03:02.09] To end up in the same place\n" +
+        "[03:09.00] Coach says I'm fast\n" +
+        "[03:11.10] He's right\n" +
+        "[03:13.10] The problem is\n" +
+        "[03:15.09] So is my life\n" +
+        "[03:31.00] Coach says I'm fast\n" +
+        "[03:38.01] Coach says I'm fast\n" +
+        "[03:41.00] Cash crash\n" +
+        "[03:44.99] Coach says I'm fast\n" +
+        "[03:48.00] He says it like it's a good thing\n" +
+        "[03:51.10] Fast, getting off the line\n" +
+        "[03:54.09] Fast, pulling my head back\n" +
+        "[03:57.99] Fast enough to see the punch\n" +
+        "[04:01.09] Half a second before it lands\n" +
+        "[04:04.09] Half a second is a long time\n" +
+        "[04:07.09] You can close your eyes\n" +
+        "[04:09.10] You can change your mind\n" +
+        "[04:11.09] You can miss a call\n" +
+        "[04:13.09] You can lose a fight\n" +
+        "[04:15.10] I spend a whole day running\n" +
+        "[04:17.09] So I can get locked up on time\n" +
+        "[04:20.09] I think that's kind of funny\n" +
+        "[04:22.10] Well, not funny, like a joke\n" +
+        "[04:24.09] Funny like when everybody spoke\n" +
+        "[04:27.10] But nobody understand anything\n" +
+        "[04:32.00] Cash crash\n" +
+        "[04:34.10] Time throws the first punch\n" +
+        "[04:36.09] Cash crash\n" +
+        "[04:38.09] I'm coming right behind it\n" +
+        "[04:40.10] I move fast\n" +
+        "[04:41.10] I live fast\n" +
+        "[04:42.09] I live fast\n" +
+        "[04:43.09] I move fast\n" +
+        "[04:44.09] I fuck you\n" +
+        "[04:46.10] But your time is already here\n" +
+        "[04:48.10] Nora asks me if I'm okay\n" +
+        "[04:50.09] I say yes\n" +
+        "[04:51.09] I say no\n" +
+        "[04:52.10] I'm shameless\n" +
+        "[04:54.10] Because it would take too long\n" +
+        "[04:56.09] Then she looks at me\n" +
+        "[04:58.09] Like she's waiting for the rest\n" +
+        "[05:00.10] There's always a test\n" +
+        "[05:02.09] Another session\n" +
+        "[05:03.09] Another favor\n" +
+        "[05:04.09] Another favor\n" +
+        "[05:05.10] Another kind sucker\n" +
+        "[05:06.10] Another guy saying standing\n" +
+        "[05:08.09] Pretending\n" +
+        "[05:09.09] Don't worry, it'll be quick\n" +
+        "[05:11.10] Everything's quick now\n" +
+        "[05:13.10] The money\n" +
+        "[05:14.09] The punches\n" +
+        "[05:15.09] The apologies\n" +
+        "[05:16.09] Even mistakes happen before you\n" +
+        "[05:19.10] Decide to make them\n" +
+        "[05:20.09] You're right to be sorry\n" +
+        "[05:23.09] Your life will end here, my dear\n" +
+        "[05:28.00] Cash crash\n" +
+        "[05:29.09] Time throws the first punch\n" +
+        "[05:31.10] Cash crash\n" +
+        "[05:33.09] I'm coming right behind it\n" +
+        "[05:35.09] I move fast\n" +
+        "[05:36.09] I live fast\n" +
+        "[05:37.10] I live fast\n" +
+        "[05:38.10] I move fast\n" +
+        "[05:39.09] I fuck you\n" +
+        "[05:40.09] But your time is already here\n" +
+        "[05:42.09] Nora asks me if I'm okay\n" +
+        "[05:45.10] I say yes\n" +
+        "[05:46.09] I say no\n" +
+        "[05:47.09] I'm shameless\n" +
+        "[05:48.09] Because it would take too long\n" +
+        "[05:51.10] Then she looks at me\n" +
+        "[05:52.09] Like she's waiting for the rest\n" +
+        "[05:55.09] There's always a test\n" +
+        "[05:57.10] Another session\n" +
+        "[05:58.09] Another favor\n" +
+        "[05:59.09] Another kind sucker\n" +
+        "[06:00.09] Another guy saying standing\n" +
+        "[06:03.10] Pretending\n" +
+        "[06:04.10] Don't worry, it'll be quick\n" +
+        "[06:06.09] Everything's quick now\n" +
+        "[06:08.10] The money\n" +
+        "[06:09.10] The punches\n" +
+        "[06:10.10] The apologies\n" +
+        "[06:11.09] Even mistakes happen before you\n" +
+        "[06:14.09] Decide to make them\n" +
+        "[06:16.10] You're right to be sorry\n" +
+        "[06:18.09] Your life will end here, my dear\n" +
+        "[06:23.01] Cash crash\n" +
+        "[06:24.09] Time throws the first punch\n" +
+        "[06:27.10] Cash crash\n" +
+        "[06:28.10] I'm coming right behind it\n" +
+        "[06:30.09] I move fast\n" +
+        "[06:31.09] I live fast\n" +
+        "[06:32.09] I live fast\n" +
+        "[06:33.09] I move fast\n" +
+        "[06:34.10] I move fast\n" +
+        "[06:35.10] I fuck you\n" +
+        "[06:36.09] But your time is already here\n" +
+        "[06:38.09] Nora asks me if I'm okay\n" +
+        "[06:40.10] I say yes\n" +
+        "[06:42.10] I say no\n" +
+        "[06:43.09] I'm shameless\n" +
+        "[06:44.09] Because it would take too long\n" +
+        "[06:47.10] Then she looks at me\n" +
+        "[06:48.10] Like she's waiting for the rest\n" +
+        "[06:51.09] There's always a test\n" +
+        "[06:53.10] Another session\n" +
+        "[06:54.10] Another favor\n" +
+        "[06:55.09] Another kind sucker\n" +
+        "[06:56.09] Another guy saying standing\n" +
+        "[06:58.09] Pretending\n" +
+        "[06:59.10] Don't worry, it'll be quick\n" +
+        "[07:01.10] Everything's quick now\n" +
+        "[07:02.09] The money\n" +
+        "[07:03.09] The punches\n" +
+        "[07:04.09] The apologies\n" +
+        "[07:05.10] Even mistakes happen before you\n" +
+        "[07:08.09] Decide to make them\n" +
+        "[07:09.09] You're right to be sorry\n" +
+        "[07:11.09] Your life will end here, my dear\n" +
+        "[07:17.00] Cash crash\n" +
+        "[07:18.10] Time throws the first punch\n" +
+        "[07:21.09] Cash crash\n" +
+        "[07:22.09] I'm coming right behind it",
     },
     {
       number: 6,
