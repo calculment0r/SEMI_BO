@@ -629,8 +629,11 @@ window.ALBUM_DATA = {
       title: "Dance Around",
       file: "./audio/07-dance-around.mp3",
       scene: "./assets/scenes/scene-morgue.jpg",
-      duration: 189.6,
+      duration: 185.71,
       credits: "",
+      // Fichier audio remplace le 30/07 (~4s plus court que l'original) ; le
+      // calage des paroles ci-dessous vient de l'ancien fichier et n'a pas pu
+      // etre reverifie a l'oreille sur celui-ci — a confirmer.
       lyrics:
         "[00:00.42] Dance as long as you can dance, dance around the earth\n" +
         "[00:24.96] Free as a man, one day left before the gate turns\n" +
