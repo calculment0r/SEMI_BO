@@ -135,16 +135,21 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
   position: relative; display: flex; flex-direction: column; gap: 12px;
   width: 100%; padding: 14px 10px 16px;
   background: transparent; border: 0; text-align: left; color: var(--text);
-  transition: padding-left 0.25s var(--ease);
 }
-.track-btn:hover { padding-left: 16px; }
-.track.current .track-btn { padding-left: 16px; }
 
-.track-top { display: flex; align-items: center; gap: 16px; min-height: 30px; }
+/* Le nudge hover/current vit sur .track-top (transform), jamais sur le
+   padding de .track-btn : .track-scene doit garder une boite parente stable
+   pour que son calcul de bord a bord (calc(100% + 64px)) reste juste. */
+.track-top { display: flex; align-items: center; gap: 16px; min-height: 30px; transition: transform 0.25s var(--ease); }
+.track-btn:hover .track-top { transform: translateX(6px); }
+.track.current .track-btn .track-top { transform: translateX(6px); }
 
-/* Vignette panoramique de la piste, sous le titre. */
+/* Vignette panoramique de la piste, sous le titre : bord a bord (comme la
+   pochette), la hauteur vient du ratio panoramique de l'image, pas d'une
+   valeur fixe arbitraire. Compense le padding de .track-btn (10px) ET celui
+   de .page (22px) pour atteindre le vrai bord de l'ecran. */
 .track-scene {
-  height: 108px; border-radius: 10px; overflow: hidden;
+  width: calc(100% + 64px); margin: 0 -32px; aspect-ratio: 21 / 9; overflow: hidden;
   background-color: var(--surface-2);
   background-repeat: no-repeat; background-size: cover; background-position: center;
   outline: 1px solid var(--border); outline-offset: -1px;
@@ -158,7 +163,7 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 .track-main { flex: 1 1 auto; min-width: 0; }
 .track-title {
   font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; letter-spacing: -0.01em;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color 0.2s;
+  line-height: 1.15; transition: color 0.2s;
 }
 .track.current .track-title { color: var(--accent); }
 
@@ -184,7 +189,6 @@ body.is-playing .track.current .track-eq i { animation: eq 0.95s ease-in-out inf
 .lyrics-toggle:hover { color: var(--text); }
 .chevron { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; transition: transform 0.3s var(--ease); }
 .lyrics-toggle[aria-expanded="true"] .chevron { transform: rotate(180deg); }
-.lyrics-badge { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 2px 8px; }
 .lyrics-fs {
   background: transparent; border: 1px solid var(--border); border-radius: 12px; width: 42px; height: 42px;
   display: inline-flex; align-items: center; justify-content: center; color: var(--muted);
@@ -285,10 +289,12 @@ body.is-playing .track.current .track-eq i { animation: eq 0.95s ease-in-out inf
    (barre rouge), degrade gauche/droite comme le masque du lyrics-box. Le
    spectre lui-meme defile ; la cue ne bouge jamais. */
 .waveform {
-  position: relative; height: 40px; margin-top: 14px; overflow: hidden; pointer-events: none;
+  position: relative; height: 40px; margin-top: 14px; overflow: hidden;
+  touch-action: none; cursor: grab;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
           mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
 }
+.waveform:active { cursor: grabbing; }
 .waveform-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .waveform-cue {
   position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px;
@@ -398,4 +404,5 @@ body.is-playing .btn-play .btn-play-ring { animation: ring 2.6s var(--ease) infi
   .album { flex-direction: row; align-items: flex-end; gap: 34px; }
   .cover-frame { width: 300px; margin: 0; flex: 0 0 auto; }
   .album-meta { flex: 1 1 auto; }
+  .track-scene { width: auto; margin: 0; border-radius: 10px; }
 }

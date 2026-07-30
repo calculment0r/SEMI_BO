@@ -168,7 +168,6 @@
   var lyricsSection = $("lyrics-section");
   var lyricsHead = $("lyrics-head");
   var lyricsToggle = $("lyrics-toggle");
-  var lyricsBadge = $("lyrics-badge");
   var lyricsFsBtn = $("lyrics-fullscreen");
   var lyricsBody = $("lyrics-body");
   var lyricsCredits = $("lyrics-credits");
@@ -178,6 +177,7 @@
   var lyricsBannerTrack = $("lyrics-banner-track");
   var lyricsBg = $("lyrics-bg");
   var waveformCanvas = $("waveform-canvas");
+  var waveformEl = $("waveform");
 
   // Visuel de la piste courante : vignette du lecteur, bandeau + fond du
   // plein ecran. Meme image (t.scene) partout, chacun avec son propre cadrage.
@@ -225,7 +225,6 @@
     lyricsSection.hidden = false;
     lyricsHead.hidden = !(hasLyrics || hasCredits);
     lyricsFsBtn.hidden = !hasLyrics;
-    lyricsBadge.hidden = !currentLyrics.synced;
     if (hasCredits) { lyricsCredits.textContent = track.credits; lyricsCredits.hidden = false; }
     else lyricsCredits.hidden = true;
 
@@ -420,6 +419,32 @@
   window.addEventListener("resize", function () {
     if (lyricsSection.classList.contains("fullscreen")) { ensureCanvasSize(); drawWaveformFrame(); }
   });
+
+  // Le spectre se deplace au doigt : on tire le ruban, la cue ne bouge pas.
+  // Glisser vers la droite fait apparaitre le passe (rewind), vers la
+  // gauche l'a-venir (avance) — comme si on tirait une bande physique.
+  var waveformDrag = null;
+  if (waveformEl) {
+    waveformEl.addEventListener("pointerdown", function (ev) {
+      if (!waveformCurrentPeaks) return;
+      var rect = waveformCanvas.getBoundingClientRect();
+      waveformDrag = { startX: ev.clientX, startPos: player.relPosition(), cssPxPerSec: rect.width / 20 };
+      if (waveformEl.setPointerCapture) { try { waveformEl.setPointerCapture(ev.pointerId); } catch (e) {} }
+      ev.preventDefault();
+    });
+    waveformEl.addEventListener("pointermove", function (ev) {
+      if (!waveformDrag) return;
+      var dx = ev.clientX - waveformDrag.startX;
+      var dur = player.relDuration();
+      var next = waveformDrag.startPos - dx / waveformDrag.cssPxPerSec;
+      next = Math.max(0, isFinite(dur) ? Math.min(dur, next) : next);
+      player.seekRelative(next);
+      drawWaveformFrame();
+    });
+    var endWaveformDrag = function () { waveformDrag = null; };
+    waveformEl.addEventListener("pointerup", endWaveformDrag);
+    waveformEl.addEventListener("pointercancel", endWaveformDrag);
+  }
 
   function toggleFullscreen(on) {
     lyricsSection.classList.toggle("fullscreen", on);
