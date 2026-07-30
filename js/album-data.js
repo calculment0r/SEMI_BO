@@ -12,7 +12,12 @@
  * - Scenes : 7 reelles sur 8, ASSOCIATION AUX PISTES NON CONFIRMEE — l'ordre
  *   ci-dessous est arbitraire (ordre d'upload), a corriger. La piste 8 utilise
  *   un placeholder en attendant le visuel manquant.
- * - Titres et fichiers audio : PLACEHOLDERS, en attente.
+ * - Pistes 1-5 : audio reel. Titres DEDUITS DU NOM DE FICHIER (a confirmer) :
+ *   halfdead -> "Half Dead", livingprooflive -> "Living Proof (Live)",
+ *   backlash -> "Backlash", lasemi -> "La Semi",
+ *   fastfeat.trace -> "Fast (feat. Trace)". Ordre = ordre d'upload, a corriger
+ *   si ce n'est pas l'ordre voulu dans l'album.
+ * - Pistes 6-8 : audio + titres PLACEHOLDERS, en attente.
  *
  * Paroles "lyrics" : format LRC synchronise -> [mm:ss.xx] texte (temps relatif
  * au debut du morceau). Laisser vide si pas encore disponible.
@@ -35,41 +40,46 @@ window.ALBUM_DATA = {
   tracks: [
     {
       number: 1,
-      title: "Piste 1",
-      file: "./audio/01.mp3",
+      title: "Half Dead",
+      file: "./audio/01-half-dead.mp3",
       scene: "./assets/scenes/scene-wall.jpg",
+      duration: 149.81,
       credits: "",
       lyrics: "",
     },
     {
       number: 2,
-      title: "Piste 2",
-      file: "./audio/02.mp3",
+      title: "Living Proof (Live)",
+      file: "./audio/02-living-proof-live.mp3",
       scene: "./assets/scenes/scene-lighter.jpg",
+      duration: 184.32,
       credits: "",
       lyrics: "",
     },
     {
       number: 3,
-      title: "Piste 3",
-      file: "./audio/03.mp3",
+      title: "Backlash",
+      file: "./audio/03-backlash.mp3",
       scene: "./assets/scenes/scene-gun.jpg",
+      duration: 157.2,
       credits: "",
       lyrics: "",
     },
     {
       number: 4,
-      title: "Piste 4",
-      file: "./audio/04.mp3",
+      title: "La Semi",
+      file: "./audio/04-la-semi.mp3",
       scene: "./assets/scenes/scene-couple.jpg",
+      duration: 244.37,
       credits: "",
       lyrics: "",
     },
     {
       number: 5,
-      title: "Piste 5",
-      file: "./audio/05.mp3",
+      title: "Fast (feat. Trace)",
+      file: "./audio/05-fast-feat-trace.mp3",
       scene: "./assets/scenes/scene-booking.jpg",
+      duration: 443.4,
       credits: "",
       lyrics: "",
     },
