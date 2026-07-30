@@ -21,13 +21,19 @@
  * Paroles "lyrics" : format LRC synchronise -> [mm:ss.xx] texte (temps relatif
  * au debut du morceau). Laisser vide si pas encore disponible.
  *
- * "La Semi" (piste 4) : paroles de test reconstruites depuis un .srt
- * auto-transcrit (TurboScribe) dont les coupures ne suivent pas les lignes
- * du texte. Les timestamps sont interpoles (proportionnels a la position du
- * mot dans le bloc source), donc approximatifs -> A REECOUTER ET CORRIGER.
- * Quelques mots looks douteux de la transcription auto (a verifier a
- * l'oreille) : "T'as la reve ?", "ténètre", "monde enceinte", "Une look",
- * "patatrac", "à corps", "Pour ce qui me choix".
+ * Paroles reconstruites depuis les .srt fournis (timestamps = debut de bloc,
+ * a REECOUTER ET CORRIGER, precision pas garantie) :
+ * - "La Semi" (piste 4) : .srt auto-transcrit (TurboScribe) dont les
+ *   coupures ne suivent pas les lignes du texte -> lignes regroupees et
+ *   timestamps interpoles (approximatifs). Mots douteux a verifier a
+ *   l'oreille : "T'as la reve ?", "ténètre", "monde enceinte", "Une look",
+ *   "patatrac", "à corps", "Pour ce qui me choix".
+ * - "Backlash" (piste 3) : mots douteux : "a whoring case".
+ * - "Dance Around" (piste 7) : mots douteux : "sweet apricot".
+ * - "Living Proof" (piste 6) ET "Living Proof (Live)" (piste 2) partagent le
+ *   MEME texte/timing (un seul .srt fourni pour les deux versions) alors que
+ *   la version live dure ~30s de plus -> le calage peut deriver vers la fin
+ *   de la version live, a recaler separement si besoin.
  */
 
 window.ALBUM_DATA = {
@@ -61,7 +67,65 @@ window.ALBUM_DATA = {
       scene: "./assets/scenes/scene-lighter.jpg",
       duration: 184.32,
       credits: "",
-      lyrics: "",
+      // Meme paroles que la version studio (piste 6) : meme chanson, timing
+      // non re-cale sur cette prise live (~30s plus longue) -> peut deriver
+      // vers la fin, a corriger a l'oreille.
+      lyrics:
+        "[00:00.20] Je vais baisser le son sans vraiment l'éteindre\n" +
+        "[00:03.60] Faut que j'entende son coeur quand même\n" +
+        "[00:06.16] C'est peut-être mieux comme ça\n" +
+        "[00:09.60] Je sais pas\n" +
+        "[00:13.48] Tu dors à moitié\n" +
+        "[00:15.05] Ta main est tombée sur moi\n" +
+        "[00:16.17] Je l'ai pas bougé, y'a un truc qui cogne dehors\n" +
+        "[00:18.76] Putain ça cogne fort\n" +
+        "[00:20.65] Ou alors c'est moi, j'suis pas sûr\n" +
+        "[00:22.33] Je tourne en rond, un soleil à faible lueur\n" +
+        "[00:24.88] On a pas bougé depuis un bail\n" +
+        "[00:26.74] C'est pas un choix, c'est juste qu'on est bien juste là\n" +
+        "[00:29.37] J'vois qu'on flotte, j'crois qu'on flotte\n" +
+        "[00:32.09] Toi tu dors à moitié, moi en horaire éclatée\n" +
+        "[00:34.82] Les semaines ont compté les heures\n" +
+        "[00:36.82] À chacun sa croix, à chacun son leurre\n" +
+        "[00:38.81] Reste encore un peu, juste le temps que\n" +
+        "[00:43.20] Non je sais pas le temps de quoi\n" +
+        "[00:46.02] T'as dit un truc dans ton sommeil\n" +
+        "[00:47.62] J'ai pas compris lequel, je l'ai gardé près de mon coeur\n" +
+        "[00:49.38] Un lapin dans les phares, foudroyé par l'erreur\n" +
+        "[00:51.13] Mais ma main a glissé sur ton ventre\n" +
+        "[00:53.14] Et j'ai pensé à tout ce qui vient\n" +
+        "[00:54.73] Un trésor pour toujours en commun\n" +
+        "[00:56.49] Et si dehors quelqu'un crie ou quelqu'un rit\n" +
+        "[00:59.06] C'est presque la même chose\n" +
+        "[01:00.74] Car tout s'embrouille, avec le temps tout rouille\n" +
+        "[01:03.61] Vas-y viens on dort\n" +
+        "[01:04.90] Tu devais aussi arrêter de fumer\n" +
+        "[01:06.42] Mais moi ce que je sais\n" +
+        "[01:07.53] C'est qu'on finit jamais rien\n" +
+        "[01:09.13] Et c'est pas grave, no, no, no, no, no\n" +
+        "[01:11.53] Tout ça flotte, putain j'crois que tout ça flotte\n" +
+        "[01:14.02] Entre ce que je promets et ce que j'arrive à faire\n" +
+        "[01:16.10] Mais en pointillé, aide-moi à retenir nos heures\n" +
+        "[01:18.73] À chacun tes choix, à chacun son coeur\n" +
+        "[01:20.73] Mais l'amour au centre ici\n" +
+        "[01:22.49] Si proche, plus tendre, reste encore un peu\n" +
+        "[01:26.01] Juste le temps que\n" +
+        "[01:28.88] Non je sais pas le temps, de quoi, quoi, quoi\n" +
+        "[01:32.58] Si demain n'arrivait plus\n" +
+        "[01:34.42] Si plus rien n'advenait\n" +
+        "[01:36.17] On se referait l'appareil\n" +
+        "[01:38.17] Le canal de l'Ourcq nous tient\n" +
+        "[01:39.77] Ta, ta, ta respiration\n" +
+        "[01:41.45] Sous la ligne de flottaison\n" +
+        "[01:43.29] Bon, bon, bon, bon, bon, bon\n" +
+        "[01:45.86] Viens on tient\n" +
+        "[01:46.81] Après nous, à tout ce qui vient\n" +
+        "[01:48.57] Ton souffle et moi, toi\n" +
+        "[01:50.26] On est pareil, presque\n" +
+        "[01:52.39] Ça gronde encore\n" +
+        "[01:53.86] Ou c'est le système qui sonde\n" +
+        "[01:55.62] J'ai pas les idées claires\n" +
+        "[01:57.30] Reste encore un peu",
     },
     {
       number: 3,
@@ -70,7 +134,19 @@ window.ALBUM_DATA = {
       scene: "./assets/scenes/scene-gun.jpg",
       duration: 157.2,
       credits: "",
-      lyrics: "",
+      lyrics:
+        "[00:00.32] Under moonlight we burn, we fight, chasing one clean win at every turn\n" +
+        "[00:05.53] Love on hold, my life, my heart on credit, falling for the flash, but the bill comes with it\n" +
+        "[00:14.88] Backlash, bones break the same, backlash, everybody plays my game\n" +
+        "[00:20.90] Love for money, that line gets blurred, every promise has a price attached to every word\n" +
+        "[00:30.01] Under the pressure, ain't my killing moon, you learn that the good things leave too soon\n" +
+        "[00:48.33] Is it the belt, the money, the praise? One bad step and a whoring case\n" +
+        "[00:54.32] High guard, low blow, still I ride the wave, every round's a gamble, every deal makes a slave\n" +
+        "[01:02.01] Trading punches, trading chances, in the veins, pulse, that's where I take my chances\n" +
+        "[01:09.20] Frames and hearts, they break the same, one in the ring, one outside the frame\n" +
+        "[01:15.70] Love for money, the lines get blurred, in the end, what are we really fighting for?\n" +
+        "[01:53.36] Backlash, blood on the floor, win one round, they ask for more\n" +
+        "[02:12.08] Love for money, the lines get blurred, in the end, what are we really fighting for?",
     },
     {
       number: 4,
@@ -264,7 +340,62 @@ window.ALBUM_DATA = {
       scene: "./assets/scenes/scene-pill.jpg",
       duration: 154.56,
       credits: "",
-      lyrics: "",
+      lyrics:
+        "[00:00.20] Je vais baisser le son sans vraiment l'éteindre\n" +
+        "[00:03.60] Faut que j'entende son coeur quand même\n" +
+        "[00:06.16] C'est peut-être mieux comme ça\n" +
+        "[00:09.60] Je sais pas\n" +
+        "[00:13.48] Tu dors à moitié\n" +
+        "[00:15.05] Ta main est tombée sur moi\n" +
+        "[00:16.17] Je l'ai pas bougé, y'a un truc qui cogne dehors\n" +
+        "[00:18.76] Putain ça cogne fort\n" +
+        "[00:20.65] Ou alors c'est moi, j'suis pas sûr\n" +
+        "[00:22.33] Je tourne en rond, un soleil à faible lueur\n" +
+        "[00:24.88] On a pas bougé depuis un bail\n" +
+        "[00:26.74] C'est pas un choix, c'est juste qu'on est bien juste là\n" +
+        "[00:29.37] J'vois qu'on flotte, j'crois qu'on flotte\n" +
+        "[00:32.09] Toi tu dors à moitié, moi en horaire éclatée\n" +
+        "[00:34.82] Les semaines ont compté les heures\n" +
+        "[00:36.82] À chacun sa croix, à chacun son leurre\n" +
+        "[00:38.81] Reste encore un peu, juste le temps que\n" +
+        "[00:43.20] Non je sais pas le temps de quoi\n" +
+        "[00:46.02] T'as dit un truc dans ton sommeil\n" +
+        "[00:47.62] J'ai pas compris lequel, je l'ai gardé près de mon coeur\n" +
+        "[00:49.38] Un lapin dans les phares, foudroyé par l'erreur\n" +
+        "[00:51.13] Mais ma main a glissé sur ton ventre\n" +
+        "[00:53.14] Et j'ai pensé à tout ce qui vient\n" +
+        "[00:54.73] Un trésor pour toujours en commun\n" +
+        "[00:56.49] Et si dehors quelqu'un crie ou quelqu'un rit\n" +
+        "[00:59.06] C'est presque la même chose\n" +
+        "[01:00.74] Car tout s'embrouille, avec le temps tout rouille\n" +
+        "[01:03.61] Vas-y viens on dort\n" +
+        "[01:04.90] Tu devais aussi arrêter de fumer\n" +
+        "[01:06.42] Mais moi ce que je sais\n" +
+        "[01:07.53] C'est qu'on finit jamais rien\n" +
+        "[01:09.13] Et c'est pas grave, no, no, no, no, no\n" +
+        "[01:11.53] Tout ça flotte, putain j'crois que tout ça flotte\n" +
+        "[01:14.02] Entre ce que je promets et ce que j'arrive à faire\n" +
+        "[01:16.10] Mais en pointillé, aide-moi à retenir nos heures\n" +
+        "[01:18.73] À chacun tes choix, à chacun son coeur\n" +
+        "[01:20.73] Mais l'amour au centre ici\n" +
+        "[01:22.49] Si proche, plus tendre, reste encore un peu\n" +
+        "[01:26.01] Juste le temps que\n" +
+        "[01:28.88] Non je sais pas le temps, de quoi, quoi, quoi\n" +
+        "[01:32.58] Si demain n'arrivait plus\n" +
+        "[01:34.42] Si plus rien n'advenait\n" +
+        "[01:36.17] On se referait l'appareil\n" +
+        "[01:38.17] Le canal de l'Ourcq nous tient\n" +
+        "[01:39.77] Ta, ta, ta respiration\n" +
+        "[01:41.45] Sous la ligne de flottaison\n" +
+        "[01:43.29] Bon, bon, bon, bon, bon, bon\n" +
+        "[01:45.86] Viens on tient\n" +
+        "[01:46.81] Après nous, à tout ce qui vient\n" +
+        "[01:48.57] Ton souffle et moi, toi\n" +
+        "[01:50.26] On est pareil, presque\n" +
+        "[01:52.39] Ça gronde encore\n" +
+        "[01:53.86] Ou c'est le système qui sonde\n" +
+        "[01:55.62] J'ai pas les idées claires\n" +
+        "[01:57.30] Reste encore un peu",
     },
     {
       number: 7,
@@ -273,7 +404,34 @@ window.ALBUM_DATA = {
       scene: "./assets/scenes/scene-morgue.jpg",
       duration: 189.6,
       credits: "",
-      lyrics: "",
+      lyrics:
+        "[00:00.42] Dance as long as you can dance, dance around the earth\n" +
+        "[00:24.96] Free as a fish in the water, as a bird in the air\n" +
+        "[00:30.29] Light as the wind that dances through the trees\n" +
+        "[00:34.85] You're the mast of a boat that dances beneath the wave\n" +
+        "[00:42.17] Dance as long as you can dance, on the pavement, on the grass\n" +
+        "[00:45.06] On the bistro table, in the shadow of taverns\n" +
+        "[00:50.33] Come, let yourself be carried by every kind of music\n" +
+        "[00:55.13] Rising from a piano or sweet apricot\n" +
+        "[01:01.14] Dance as long as you can dance, dance around the earth\n" +
+        "[01:06.25] Dance in the arms of Matilda, or even Lilo\n" +
+        "[01:11.45] Dance to find love again, and madness too\n" +
+        "[01:16.74] Dance to dazzle your soul, when it's bored and blue\n" +
+        "[01:22.41] Dance as long as you can dance, dance around the earth\n" +
+        "[01:48.01] So you no longer carry death and misery on your back\n" +
+        "[01:50.81] And you will see the underground summer burst forth\n" +
+        "[01:53.45] And torrents of joy flowing through your veins\n" +
+        "[01:58.98] Dance as long as you can dance, dance around the earth\n" +
+        "[02:04.09] Dance so a brand new flower may bloom its way\n" +
+        "[02:09.37] Dance the way we live, dance the way we love\n" +
+        "[02:14.56] Dance the way we write a poem on the wall\n" +
+        "[02:20.16] Dance as long as you can dance, dance around the earth\n" +
+        "[02:25.70] Dance as long as you can dance, come, the ball is open\n" +
+        "[02:30.73] Dance as long as you can dance, dance around the earth\n" +
+        "[02:35.93] Dance as long as you can dance, come, the ball is open\n" +
+        "[02:41.37] Dance as long as you can dance, dance as long as you can dance\n" +
+        "[02:45.29] Dance around the earth, dance as long as you can dance\n" +
+        "[02:49.69] Come, the ball is open",
     },
   ],
 };
