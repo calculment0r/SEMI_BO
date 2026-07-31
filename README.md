@@ -72,10 +72,11 @@ tracks: [
     title: "Nom du morceau",
     file: "./audio/01-nom-du-morceau.mp3",
     scene: "./assets/scenes/scene-01.jpg",  // plan large affiche pendant ce morceau
+    duration: 218.5, // duree en secondes (affichee dans la playlist)
     start: 0.0,      // utile seulement en mode continu
     end: 218.5,      // utile seulement en mode continu
     credits: "",     // facultatif
-    lyrics: "",      // facultatif (voir section 3)
+    lyricsFile: "./lyrics/01-nom-du-morceau.lrc",  // facultatif (voir section 3)
   },
   // ...
 ]
@@ -88,36 +89,52 @@ Les champs facultatifs peuvent rester vides : le site fonctionne sans.
 
 ---
 
-## 3. Paroles karaoke
+## 3. Paroles (fichiers .lrc)
 
-Le champ `lyrics` de chaque morceau accepte trois formes :
-
-**Rien** : `lyrics: ""` -> pas de paroles.
-
-**Texte simple** (affiche, sans defilement automatique) :
+Les paroles vivent dans des fichiers **`.lrc` separes**, un par morceau, dans le
+dossier `lyrics/`. Le morceau les reference via `lyricsFile` :
 
 ```js
-lyrics: "Premiere ligne\nDeuxieme ligne\nTroisieme ligne"
+lyricsFile: "./lyrics/04-la-semi.lrc",
 ```
 
-**Synchronise (karaoke)** au format **LRC** : chaque ligne commence par son temps
-`[minute:seconde.centieme]`. Les temps sont **relatifs au debut du morceau**.
+Laisse `lyricsFile: ""` (ou retire le champ) pour un morceau sans paroles.
 
-```js
-lyrics:
-  "[00:12.40] Premiere ligne\n" +
-  "[00:16.90] Deuxieme ligne\n" +
-  "[00:21.10] Troisieme ligne"
+Format **LRC** standard : chaque ligne commence par son temps
+`[minute:seconde.centieme]`, **relatif au debut du morceau**.
+
+```
+[00:12.40]Premiere ligne
+[00:16.90]Deuxieme ligne
+[00:21.10]Troisieme ligne
 ```
 
-En mode synchronise, la ligne active s'illumine et se centre automatiquement.
-On peut toucher une ligne pour sauter a ce moment, et passer les paroles en
-plein ecran avec le bouton dedie.
+Pour mettre a jour les paroles d'un morceau, il suffit de remplacer son fichier
+`.lrc` : aucun code a toucher.
 
-> Limite importante : les paroles synchronisees s'affichent **dans la page**,
-> quand l'ecran est allume. Elles n'apparaissent **pas** sur l'ecran verrouille :
-> aucun navigateur mobile n'expose les paroles au systeme. L'ecran verrouille
-> montre uniquement la pochette, le titre, l'artiste et l'album (voir section 9).
+### Apartes et voix secondaires
+
+Deux lignes qui portent **exactement le meme timestamp** sont affichees
+**ensemble**, et restent a l'ecran jusqu'au timestamp suivant. C'est la
+convention utilisee pour les apartes : la ligne **entre parentheses** (une voix
+differente) est ecrite sur le meme temps que la phrase qu'elle accompagne, et
+s'affiche en retrait au-dessus d'elle.
+
+```
+[00:18.19](genre a moitié heureux ca existe?)
+[00:18.19]T'es dehors avec une montre comme seule idee pour tout gerer.
+```
+
+Les marqueurs de mise en forme parfois laisses par les outils d'export
+(`**gras**`, `# titre`) sont retires automatiquement a l'affichage.
+
+Les paroles s'affichent dans le panneau du lecteur **deplie** (accordeon), une
+ligne a la fois, en suivant la lecture.
+
+> Limite importante : les paroles s'affichent **dans la page**, quand l'ecran est
+> allume. Elles n'apparaissent **pas** sur l'ecran verrouille : aucun navigateur
+> mobile n'expose les paroles au systeme. L'ecran verrouille montre uniquement la
+> pochette, le titre, l'artiste et l'album (voir section 9).
 
 ---
 
@@ -130,7 +147,10 @@ plein ecran avec le bouton dedie.
 3. Garde les memes noms de fichier : rien d'autre a changer.
    (Sinon, mets a jour `cover` et `artwork512` dans `album-data.js`.)
 
-Une pochette carree et bien lisible en petit rend mieux sur l'ecran verrouille.
+Garde bien une source **carree** : c'est ce format qu'utilisent l'ecran
+verrouille et la PWA. En haut de la page, la meme image est simplement recadree
+en bandeau **21:9** (recadrage centre) — pense donc a garder le sujet important
+vers le centre en hauteur, pour qu'il survive au recadrage.
 
 ---
 
@@ -226,8 +246,8 @@ fois le site en HTTPS, donc de preference apres publication sur GitHub Pages.)
   l'utilisateur (regle des navigateurs). Aucune lecture automatique au chargement.
 - Les boutons suivant / precedent de l'ecran verrouille dependent du navigateur ;
   ils fonctionnent quand celui-ci les autorise.
-- Les **paroles synchronisees** ne s'affichent que dans la page (ecran allume),
-  jamais sur l'ecran verrouille (aucun navigateur ne l'expose au systeme).
+- Les **paroles** ne s'affichent que dans la page (ecran allume), jamais sur
+  l'ecran verrouille (aucun navigateur ne l'expose au systeme).
 
 ---
 
@@ -241,7 +261,8 @@ fois le site en HTTPS, donc de preference apres publication sur GitHub Pages.)
 - [ ] Morceau suivant depuis l'ecran verrouille.
 - [ ] Attendre la fin d'un morceau : passage automatique au suivant.
 - [ ] Revenir dans Safari : l'interface est synchronisee.
-- [ ] Ouvrir les paroles : la ligne active suit la musique.
+- [ ] Deplier le lecteur (clic sur un titre ou sur la vignette) : le spectre
+      defile et la ligne de paroles suit la musique.
 
 ### Android (Chrome)
 - [ ] Memes tests que ci-dessus.

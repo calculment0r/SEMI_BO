@@ -32,20 +32,19 @@
     var s = Math.floor(sec), m = Math.floor(s / 60), r = s % 60;
     return m + ":" + (r < 10 ? "0" : "") + r;
   }
-  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   var playerEl = document.querySelector(".player");
 
-  // Garde --player-h synchronise avec la hauteur REPLIEE du lecteur fixe
-  // (elle varie avec env(safe-area-inset-bottom) sur iPhone a encoche /
-  // Dynamic Island). Sans ca, le bas de la page (dont les derniers titres de
-  // la liste) peut se retrouver cache sous le lecteur. On ignore les
-  // changements de hauteur pendant que l'accordeon est deplie : cet etat-la
-  // recouvre volontairement la page, il ne doit pas lui reserver de place.
+  // Garde --player-h synchronise avec la hauteur reelle du lecteur fixe. Elle
+  // varie avec env(safe-area-inset-bottom) sur iPhone a encoche / Dynamic
+  // Island, et surtout quand l'accordeon se deplie. .page s'en sert comme
+  // padding-bas : sans ca, le lecteur deplie recouvre la fin de la liste et
+  // les derniers titres deviennent inatteignables (la page n'a alors pas
+  // assez de hauteur pour defiler jusqu'a eux). Le padding s'ajoute SOUS le
+  // contenu : il rend la page defilable sans deplacer ce qui est affiche.
   (function watchPlayerHeight() {
     if (!playerEl) return;
     function sync() {
-      if (playerEl.classList.contains("expanded")) return;
       document.documentElement.style.setProperty("--player-h", playerEl.offsetHeight + "px");
     }
     sync();
@@ -191,26 +190,61 @@
   var currentTrackRef = null;
   var lyricsRequestId = 0;
 
+  // Certains .lrc exportes contiennent des marqueurs de mise en forme
+  // (**gras**, "# titre") qui s'afficheraient tels quels a l'ecran.
+  function cleanLyricText(text) {
+    return text
+      .replace(/\*\*([\s\S]*?)\*\*/g, "$1")
+      .replace(/^\s*#+\s*/, "")
+      .trim();
+  }
+
+  // Une ligne entre parentheses = une voix differente (aparte), pas la ligne
+  // principale : elle est toujours couplee a la ligne qui porte le meme
+  // timestamp (cf. regroupement ci-dessous) et affichee en retrait.
+  function isAside(text) {
+    return text.charAt(0) === "(";
+  }
+
   // Parseur LRC standard : une ligne par [mm:ss.xx]texte (plusieurs balises
-  // sur une meme ligne sont supportees). Sans aucune balise de temps nulle
-  // part dans le fichier, le texte est traite comme non synchronise (pas
-  // affiche pour l'instant : l'accordeon n'affiche qu'une ligne courante,
-  // qui suppose un temps connu).
+  // sur une meme ligne sont supportees).
+  //
+  // Les lignes qui PARTAGENT UN MEME TIMESTAMP sont regroupees en un seul
+  // bloc affiche d'un coup (chaque bloc = { t, parts: [texte, ...] }), et ce
+  // bloc reste a l'ecran jusqu'au timestamp suivant. C'est le cas des
+  // apartes entre parentheses, ecrits sur le meme temps que la phrase
+  // qu'ils accompagnent : sans regroupement, la recherche de la ligne
+  // courante retenait la derniere des deux et l'aparte n'apparaissait
+  // jamais.
+  //
+  // Sans aucune balise de temps dans le fichier, le texte est considere non
+  // synchronise et n'est pas affiche : l'accordeon montre la ligne EN COURS,
+  // ce qui suppose un temps connu.
   function parseLyrics(raw) {
     if (typeof raw !== "string" || raw.trim() === "") return { synced: false, lines: [] };
     var tag = /\[(\d{1,2}):(\d{1,2}(?:[.:]\d{1,3})?)\]/g;
-    var rows = raw.split(/\r?\n/), timed = [], plain = [], hasTimed = false;
+    var rows = raw.split(/\r?\n/), timed = [];
     rows.forEach(function (row) {
-      var matches = [], m; tag.lastIndex = 0;
+      var stamps = [], m; tag.lastIndex = 0;
       while ((m = tag.exec(row)) !== null) {
-        matches.push(parseInt(m[1], 10) * 60 + parseFloat(m[2].replace(":", ".")));
+        stamps.push(parseInt(m[1], 10) * 60 + parseFloat(m[2].replace(":", ".")));
       }
-      var text = row.replace(tag, "").trim();
-      if (matches.length) { hasTimed = true; matches.forEach(function (t) { timed.push({ t: t, text: text }); }); }
-      else if (text) plain.push({ t: null, text: text });
+      var text = cleanLyricText(row.replace(tag, ""));
+      if (!stamps.length || !text) return;
+      stamps.forEach(function (t) { timed.push({ t: t, text: text }); });
     });
-    if (hasTimed) { timed.sort(function (a, b) { return a.t - b.t; }); return { synced: true, lines: timed }; }
-    return { synced: false, lines: plain };
+    if (!timed.length) return { synced: false, lines: [] };
+    // Tri stable (garanti par la spec) : a timestamp egal, l'ordre du
+    // fichier est conserve — l'aparte reste avant sa phrase, comme ecrit.
+    timed.sort(function (a, b) { return a.t - b.t; });
+
+    var lines = [];
+    timed.forEach(function (item) {
+      var last = lines[lines.length - 1];
+      if (last && Math.abs(last.t - item.t) < 0.01) last.parts.push(item.text);
+      else lines.push({ t: item.t, parts: [item.text] });
+    });
+    return { synced: true, lines: lines };
   }
 
   // Charge le .lrc de la piste de facon asynchrone. lyricsRequestId protege
@@ -235,8 +269,21 @@
       .catch(function () { /* pas de paroles disponibles pour ce morceau : pas bloquant */ });
   }
 
-  // N'affiche que la ligne EN COURS (pas de liste qui defile) : moins
-  // d'espace vertical necessaire dans l'accordeon.
+  // Affiche le bloc EN COURS (pas de liste qui defile) : moins d'espace
+  // vertical necessaire dans l'accordeon. Un bloc peut contenir plusieurs
+  // textes s'ils partagent le meme timestamp (aparte + phrase) : ils sont
+  // alors montres ensemble jusqu'au timestamp suivant.
+  function renderLyricBlock(entry) {
+    if (!expandLyricLine) return;
+    expandLyricLine.textContent = "";
+    if (!entry) return;
+    entry.parts.forEach(function (text) {
+      var span = el("span", isAside(text) ? "lyric-part lyric-aside" : "lyric-part");
+      span.textContent = text;
+      expandLyricLine.appendChild(span);
+    });
+  }
+
   function syncLyrics(position, force) {
     if (!currentLyrics.synced || !currentLyrics.lines.length) return;
     var lines = currentLyrics.lines;
@@ -247,7 +294,7 @@
     if (idx === -1) idx = 0;
     if (idx === activeLineIndex && !force) return;
     activeLineIndex = idx;
-    if (expandLyricLine) expandLyricLine.textContent = lines[idx].text || "";
+    renderLyricBlock(lines[idx]);
   }
 
   // ------------------------------------------------------- Spectre (accordeon)
