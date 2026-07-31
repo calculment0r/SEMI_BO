@@ -11,15 +11,15 @@
  * iPhone. L'album n'est donc jamais telecharge entierement en arriere-plan.
  */
 
-var CACHE = "semi-v11";
+var CACHE = "semi-v12";
 
 var APP_SHELL = [
   "./",
   "./index.html",
-  "./css/styles.css?v=11",
-  "./js/album-data.js?v=11",
-  "./js/player.js?v=11",
-  "./js/app.js?v=11",
+  "./css/styles.css?v=12",
+  "./js/album-data.js?v=12",
+  "./js/player.js?v=12",
+  "./js/app.js?v=12",
   "./manifest.webmanifest",
   "./assets/cover-1200.jpg",
   "./assets/cover-512.jpg",
