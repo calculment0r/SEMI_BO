@@ -31,6 +31,12 @@
     var listeners = {};
     var index = 0;
     var playing = false;
+    // Volume reglé par l'utilisateur (c'est LUI qu'on affiche et qu'on
+    // memorise), separe du gain d'harmonisation propre a chaque piste.
+    // audio.volume recoit le produit des deux : sans ca, le curseur de volume
+    // sauterait tout seul a chaque changement de morceau.
+    var userVolume = 1;
+    var trackGain = 1;
     var pendingSeekRel = null; // position relative a appliquer apres loadedmetadata
     var manualSeek = false;
     var storeKey = "album-player:" + slugify(data.title || "album");
@@ -110,6 +116,7 @@
       if (i < 0 || i >= tracks.length) return;
       index = i;
       var t = tracks[i];
+      applyTrackGain();
 
       if (mode === "continuous") {
         var src = resolve(data.continuousFile);
@@ -224,6 +231,7 @@
     function selectByUser(i, autoplay) {
       if (mode === "continuous") {
         index = clamp(i, 0, tracks.length - 1);
+        applyTrackGain();
         manualSeek = true;
         applyCurrentTime(trackStart(tracks[index]));
         emit("trackchange", { index: index, track: tracks[index] });
@@ -266,8 +274,25 @@
       seekRelative(clamp(f, 0, 1) * dur);
     }
 
+    // Harmonisation du niveau entre morceaux : les masters n'ont pas tous le
+    // meme niveau percu (mesure en LUFS, cf. README). Chaque piste porte un
+    // "gain" <= 1 qui ramene tout le monde au niveau du plus faible. On ne
+    // peut qu'attenuer (audio.volume plafonne a 1), d'ou une cible calee sur
+    // la piste la plus basse plutot qu'une amplification des autres.
+    function applyVolume() {
+      audio.volume = clamp(userVolume * trackGain, 0, 1);
+    }
+
+    function applyTrackGain() {
+      var t = tracks[index];
+      var g = t && isFiniteNumber(t.gain) ? clamp(t.gain, 0, 1) : 1;
+      trackGain = g;
+      applyVolume();
+    }
+
     function setVolume(v) {
-      audio.volume = clamp(v, 0, 1);
+      userVolume = clamp(v, 0, 1);
+      applyVolume();
       save();
     }
     function setMuted(m) {
@@ -415,7 +440,9 @@
           JSON.stringify({
             index: index,
             rel: relPosition(),
-            volume: audio.volume,
+            // le volume de l'utilisateur, pas audio.volume (qui inclut le
+            // gain d'harmonisation de la piste en cours)
+            volume: userVolume,
             muted: audio.muted,
           })
         );
@@ -439,8 +466,9 @@
           st = null;
         }
       }
-      if (st && isFiniteNumber(st.volume)) audio.volume = clamp(st.volume, 0, 1);
+      if (st && isFiniteNumber(st.volume)) userVolume = clamp(st.volume, 0, 1);
       if (st && typeof st.muted === "boolean") audio.muted = st.muted;
+      applyVolume();
       var startIndex = st && isFiniteNumber(st.index) ? clamp(st.index, 0, tracks.length - 1) : 0;
       var rel = st && isFiniteNumber(st.rel) ? st.rel : 0;
       // On restaure le morceau et la position, SANS lancer la lecture.
@@ -499,6 +527,7 @@
         var i = indexForTime(audio.currentTime);
         if (i !== index) {
           index = i;
+          applyTrackGain();
           emit("trackchange", { index: index, track: tracks[index] });
           updateMediaMetadata();
         }
@@ -573,7 +602,7 @@
         return !audio.paused;
       },
       getVolume: function () {
-        return audio.volume;
+        return userVolume;
       },
       isMuted: function () {
         return audio.muted;

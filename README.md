@@ -148,9 +148,39 @@ ligne a la fois, en suivant la lecture.
    (Sinon, mets a jour `cover` et `artwork512` dans `album-data.js`.)
 
 Garde bien une source **carree** : c'est ce format qu'utilisent l'ecran
-verrouille et la PWA. En haut de la page, la meme image est simplement recadree
-en bandeau **21:9** (recadrage centre) — pense donc a garder le sujet important
-vers le centre en hauteur, pour qu'il survive au recadrage.
+verrouille et la PWA.
+
+Le **bandeau du haut** est une image separee (champ `headerImage` dans
+`album-data.js`), en **21:9**, qui ne doit PAS contenir de texte incruste : le
+mot de l'album est ecrit par-dessus en vraie typo (Archivo Black, embarquee
+dans `assets/fonts/`), donc toujours entier quelle que soit la taille d'ecran.
+
+---
+
+## 4 bis. Harmoniser le volume entre les morceaux
+
+Si un morceau parait beaucoup plus fort ou plus faible que les autres, c'est
+que les masters n'ont pas le meme niveau percu. Chaque piste accepte un champ
+`gain` (entre 0 et 1) applique a la lecture :
+
+```js
+gain: 0.598,
+```
+
+On ne peut qu'**attenuer** (le volume d'un `<audio>` plafonne a 1) : la cible
+est donc le niveau du morceau le plus faible, et les autres sont baisses
+jusqu'a lui. Ce gain est independant du curseur de volume : l'utilisateur garde
+la main, son reglage ne bouge pas d'un morceau a l'autre.
+
+Pour recalculer les valeurs, mesure le **LUFS integre** (norme EBU R128) de
+chaque piste — c'est le niveau *percu*, bien plus fiable qu'un simple volume
+moyen — puis pour chaque morceau :
+
+```
+gain = 10 ^ ((LUFS_du_plus_faible - LUFS_du_morceau) / 20)
+```
+
+Verifie ensuite que `crete x gain` reste sous 1.0 pour chaque piste.
 
 ---
 
