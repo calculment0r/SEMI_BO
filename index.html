@@ -18,7 +18,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./assets/icon-192.png" />
     <link rel="apple-touch-icon" href="./assets/icon-192.png" />
-    <link rel="stylesheet" href="./css/styles.css?v=7" />
+    <link rel="stylesheet" href="./css/styles.css?v=8" />
   </head>
   <body>
     <div id="error-banner" class="error-banner" role="alert" hidden></div>
@@ -38,8 +38,8 @@
             class="cover"
             src="./assets/cover-1200.jpg"
             alt="Pochette de l'album"
-            width="1200"
-            height="1200"
+            width="1260"
+            height="540"
           />
           <p id="cover-meta" class="cover-meta"></p>
         </div>
@@ -53,37 +53,33 @@
         <ol id="tracklist" class="tracklist"></ol>
       </section>
 
-      <section id="lyrics-section" class="lyrics-section" hidden>
-        <div id="lyrics-banner" class="lyrics-banner" aria-hidden="true">
-          <div id="lyrics-banner-img" class="lyrics-banner-img"></div>
-          <div class="lyrics-banner-scrim"></div>
-          <div class="lyrics-banner-title">
-            <p id="lyrics-banner-artist" class="lyrics-banner-artist"></p>
-            <h2 id="lyrics-banner-track" class="lyrics-banner-track"></h2>
-            <div id="waveform" class="waveform" aria-hidden="true">
-              <div class="waveform-half waveform-half-left">
-                <canvas id="waveform-canvas-accent" class="waveform-canvas"></canvas>
-              </div>
-              <div class="waveform-half waveform-half-right">
-                <canvas id="waveform-canvas-gray" class="waveform-canvas"></canvas>
-              </div>
-              <div class="waveform-cue"></div>
-            </div>
-          </div>
-        </div>
-        <div id="lyrics-body" class="lyrics-body">
-          <div id="lyrics-bg" class="lyrics-bg" aria-hidden="true"></div>
-          <p id="lyrics-credits" class="lyrics-credits" hidden></p>
-          <div id="lyrics-box" class="lyrics-box" role="list" aria-label="Paroles"></div>
-        </div>
-      </section>
-
       <div class="player-spacer" aria-hidden="true"></div>
     </main>
 
-    <footer class="player" role="region" aria-label="Lecteur audio">
+    <footer id="player" class="player" role="region" aria-label="Lecteur audio">
+      <div id="player-expand" class="player-expand" aria-hidden="true">
+        <div id="expand-scene" class="expand-scene"></div>
+        <div class="expand-scrim"></div>
+        <div id="waveform" class="waveform">
+          <div class="waveform-half waveform-half-left">
+            <canvas id="waveform-canvas-accent" class="waveform-canvas"></canvas>
+          </div>
+          <div class="waveform-half waveform-half-right">
+            <canvas id="waveform-canvas-gray" class="waveform-canvas"></canvas>
+          </div>
+          <div class="waveform-cue">
+            <span id="waveform-cue-time" class="waveform-cue-time"></span>
+          </div>
+        </div>
+        <div class="expand-info">
+          <p id="expand-artist" class="expand-artist"></p>
+          <h2 id="expand-track" class="expand-track"></h2>
+          <p id="expand-lyric-line" class="expand-lyric-line"></p>
+        </div>
+      </div>
+
       <div class="player-body">
-        <button id="mini-cover-btn" class="mini-cover" type="button" aria-label="Plein ecran">
+        <button id="mini-cover-btn" class="mini-cover" type="button" aria-label="Agrandir">
           <img id="mini-cover" src="./assets/cover-512.jpg" alt="" width="48" height="48" />
         </button>
 
@@ -139,8 +135,8 @@
 
     <audio id="audio-player" preload="metadata"></audio>
 
-    <script src="./js/album-data.js?v=7"></script>
-    <script src="./js/player.js?v=7"></script>
-    <script src="./js/app.js?v=7"></script>
+    <script src="./js/album-data.js?v=8"></script>
+    <script src="./js/player.js?v=8"></script>
+    <script src="./js/app.js?v=8"></script>
   </body>
 </html>

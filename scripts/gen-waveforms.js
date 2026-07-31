@@ -47,7 +47,15 @@ function readTrackFiles() {
   }
 
   var browser = await chromium.launch({ headless: true });
-  var page = await browser.newPage();
+  // serviceWorkers: "block" -- app.js recharge la page au premier
+  // controllerchange (pour ne jamais rester coince sur une UI en cache cote
+  // utilisateurs). Sur un contexte tout neuf, le SW revendique quand meme
+  // les clients au premier chargement (self.clients.claim()), ce qui
+  // declenche ce reload et peut casser un page.evaluate() en plein vol. Cet
+  // outil n'a besoin d'aucun comportement PWA : on bloque le SW purement et
+  // simplement.
+  var context = await browser.newContext({ serviceWorkers: "block" });
+  var page = await context.newPage();
   await page.goto(BASE_URL + "/index.html", { waitUntil: "networkidle" });
 
   for (var idx = 0; idx < files.length; idx++) {

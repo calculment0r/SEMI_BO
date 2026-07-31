@@ -11,15 +11,15 @@
  * iPhone. L'album n'est donc jamais telecharge entierement en arriere-plan.
  */
 
-var CACHE = "semi-v7";
+var CACHE = "semi-v8";
 
 var APP_SHELL = [
   "./",
   "./index.html",
-  "./css/styles.css?v=7",
-  "./js/album-data.js?v=7",
-  "./js/player.js?v=7",
-  "./js/app.js?v=7",
+  "./css/styles.css?v=8",
+  "./js/album-data.js?v=8",
+  "./js/player.js?v=8",
+  "./js/app.js?v=8",
   "./manifest.webmanifest",
   "./assets/cover-1200.jpg",
   "./assets/cover-512.jpg",
@@ -39,6 +39,13 @@ var APP_SHELL = [
   "./assets/waveforms/05-fast-feat-trace.json",
   "./assets/waveforms/06-living-proof.json",
   "./assets/waveforms/07-dance-around.json",
+  "./lyrics/01-half-dead.lrc",
+  "./lyrics/02-living-proof-live.lrc",
+  "./lyrics/03-backlash.lrc",
+  "./lyrics/04-la-semi.lrc",
+  "./lyrics/05-fast-feat-trace.lrc",
+  "./lyrics/06-living-proof.lrc",
+  "./lyrics/07-dance-around.lrc",
 ];
 
 self.addEventListener("install", function (event) {

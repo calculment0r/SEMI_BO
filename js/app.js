@@ -1,9 +1,9 @@
 /*
  * app.js — Interface SEMI
- * Relie le moteur (player.js) au DOM : album, liste (avec durees), lecteur
- * compact, karaoke (gros lettrage, lignes voisines grisees, interlude), et
- * la scene cinema en fond (plan large de la piste en cours, pan lent, fondu
- * enchaine au changement de morceau).
+ * Relie le moteur (player.js) au DOM : album, playlist plate (une image de
+ * fond statique derriere la liste), et le lecteur du bas en accordeon
+ * (replie = mini-barre, deplie = grand visuel + spectre + ligne de parole
+ * courante, lue depuis un fichier .lrc externe).
  */
 
 (function () {
@@ -34,14 +34,18 @@
   }
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Garde --player-h synchronise avec la vraie hauteur du lecteur fixe (elle
-  // varie avec env(safe-area-inset-bottom) sur iPhone a encoche / Dynamic
-  // Island). Sans ca, le bas de la page (dont les derniers titres de la
-  // liste) peut se retrouver cache sous le lecteur.
+  var playerEl = document.querySelector(".player");
+
+  // Garde --player-h synchronise avec la hauteur REPLIEE du lecteur fixe
+  // (elle varie avec env(safe-area-inset-bottom) sur iPhone a encoche /
+  // Dynamic Island). Sans ca, le bas de la page (dont les derniers titres de
+  // la liste) peut se retrouver cache sous le lecteur. On ignore les
+  // changements de hauteur pendant que l'accordeon est deplie : cet etat-la
+  // recouvre volontairement la page, il ne doit pas lui reserver de place.
   (function watchPlayerHeight() {
-    var playerEl = document.querySelector(".player");
     if (!playerEl) return;
     function sync() {
+      if (playerEl.classList.contains("expanded")) return;
       document.documentElement.style.setProperty("--player-h", playerEl.offsetHeight + "px");
     }
     sync();
@@ -70,7 +74,7 @@
   }
   cover.alt = "Pochette de l'album " + (data.title || "");
   // La vignette du lecteur (mini-cover) est mise a jour par piste dans
-  // updateTrackVisuals ; cover-512 sert juste de repli avant le 1er morceau.
+  // updateExpandVisuals ; cover-512 sert juste de repli avant le 1er morceau.
   var miniCover = $("mini-cover");
   if (miniCover) miniCover.src = data.artwork512 || data.cover || "";
 
@@ -103,17 +107,11 @@
   var albumMetaEl = document.querySelector(".album-meta");
   if (albumMetaEl) albumMetaEl.hidden = !data.description && !anyLinks;
 
-  // ---------------------------------------------------------------- Scene (fond cinema)
-  // Deux calques superposes pour un fondu enchaine ; chacun pan lentement sur
-  // toute la largeur de son image (cf. .scene-layer / @keyframes scene-pan).
+  // ---------------------------------------------------------------- Scene (fond playlist)
+  // Deux calques superposes pour un fondu enchaine ; un seul visuel statique
+  // affiche a la fois (pas d'animation en boucle, cf. styles.css).
   var sceneLayers = [$("scene-a"), $("scene-b")];
   var sceneOnIndex = -1;
-
-  function restartPan(layer) {
-    layer.style.animation = "none";
-    void layer.offsetWidth; // force le reflow -> relance l'animation depuis le debut
-    layer.style.animation = "";
-  }
 
   function setScene(url) {
     if (!url) return;
@@ -122,7 +120,6 @@
     var prev = sceneOnIndex >= 0 ? sceneLayers[sceneOnIndex] : null;
     if (!next) return;
     next.style.backgroundImage = "url('" + url + "')";
-    restartPan(next);
     requestAnimationFrame(function () {
       next.classList.add("on");
       if (prev) prev.classList.remove("on");
@@ -131,6 +128,8 @@
   }
 
   // ---------------------------------------------------------------- Tracklist
+  // Playlist plate : une ligne fine par piste (numero, titre, duree), sans
+  // visuel — le fond derriere la liste (setScene ci-dessus) suffit.
   var trackEls = [];
   (function renderTracks() {
     var list = $("tracklist");
@@ -140,20 +139,8 @@
       btn.type = "button";
       btn.setAttribute("aria-label", "Lire " + (t.title || "morceau " + (i + 1)));
 
-      // Carte : image pleine largeur, numero/titre/duree incrustes dessus
-      // (pas au-dessus) pour ne pas allonger la liste pour rien.
-      var card = el("div", "track-card");
-      if (t.scene) {
-        var scene = el("div", "track-scene");
-        scene.style.backgroundImage = "url('" + t.scene + "')";
-        scene.setAttribute("aria-hidden", "true");
-        card.appendChild(scene);
-      }
-      card.appendChild(el("div", "track-scrim"));
-
-      var info = el("div", "track-info");
-      var infoTop = el("div", "track-info-top");
       var num = el("span", "track-num mono", ("0" + (t.number != null ? t.number : i + 1)).slice(-2));
+      var title = el("span", "track-title", t.title || "Sans titre");
       var eq = el("span", "track-eq"); eq.setAttribute("aria-hidden", "true");
       eq.innerHTML = "<i></i><i></i><i></i>";
       var dur = el("span", "track-dur");
@@ -163,50 +150,52 @@
       else if (typeof t.start === "number" && typeof t.end === "number") d = t.end - t.start;
       dur.textContent = d != null ? formatTime(d) : "";
 
-      infoTop.appendChild(num);
-      infoTop.appendChild(eq);
-      infoTop.appendChild(dur);
-      info.appendChild(infoTop);
-      info.appendChild(el("div", "track-title", t.title || "Sans titre"));
-      card.appendChild(info);
-      btn.appendChild(card);
+      btn.appendChild(num);
+      btn.appendChild(title);
+      btn.appendChild(eq);
+      btn.appendChild(dur);
 
-      btn.addEventListener("click", function () { player.select(i); });
+      btn.addEventListener("click", function () {
+        player.select(i);
+        toggleExpand(true);
+      });
       li.appendChild(btn);
       list.appendChild(li);
       trackEls.push({ li: li, btn: btn, dur: dur });
     });
   })();
 
-  // ---------------------------------------------------------------- Lyrics
-  var lyricsSection = $("lyrics-section");
-  var lyricsBody = $("lyrics-body");
-  var lyricsCredits = $("lyrics-credits");
-  var lyricsBox = $("lyrics-box");
-  var lyricsBannerImg = $("lyrics-banner-img");
-  var lyricsBannerArtist = $("lyrics-banner-artist");
-  var lyricsBannerTrack = $("lyrics-banner-track");
-  var lyricsBg = $("lyrics-bg");
+  // ---------------------------------------------------------------- Lyrics (LRC)
+  var expandScene = $("expand-scene");
+  var expandArtist = $("expand-artist");
+  var expandTrack = $("expand-track");
+  var expandLyricLine = $("expand-lyric-line");
   var waveformCanvasAccent = $("waveform-canvas-accent");
   var waveformCanvasGray = $("waveform-canvas-gray");
   var waveformEl = $("waveform");
+  var waveformCueTime = $("waveform-cue-time");
 
-  // Visuel de la piste courante : vignette du lecteur, bandeau + fond du
-  // plein ecran. Meme image (t.scene) partout, chacun avec son propre cadrage.
-  function updateTrackVisuals(track) {
+  // Visuel de la piste courante (accordeon deplie) + vignette du lecteur.
+  // Meme image (t.scene) que le fond de la playlist, cadrage propre a
+  // l'accordeon.
+  function updateExpandVisuals(track) {
     var url = track && track.scene;
     if (url && miniCover) miniCover.src = url;
-    if (url && lyricsBannerImg) lyricsBannerImg.style.backgroundImage = "url('" + url + "')";
-    if (url && lyricsBg) lyricsBg.style.backgroundImage = "url('" + url + "')";
-    if (lyricsBannerArtist) lyricsBannerArtist.textContent = data.artist || "";
-    if (lyricsBannerTrack) lyricsBannerTrack.textContent = (track && track.title) || "";
+    if (url && expandScene) expandScene.style.backgroundImage = "url('" + url + "')";
+    if (expandArtist) expandArtist.textContent = data.artist || "";
+    if (expandTrack) expandTrack.textContent = (track && track.title) || "";
   }
 
   var currentLyrics = { synced: false, lines: [] };
-  var lineEls = [];
-  var activeLine = -1;
+  var activeLineIndex = -1;
   var currentTrackRef = null;
+  var lyricsRequestId = 0;
 
+  // Parseur LRC standard : une ligne par [mm:ss.xx]texte (plusieurs balises
+  // sur une meme ligne sont supportees). Sans aucune balise de temps nulle
+  // part dans le fichier, le texte est traite comme non synchronise (pas
+  // affiche pour l'instant : l'accordeon n'affiche qu'une ligne courante,
+  // qui suppose un temps connu).
   function parseLyrics(raw) {
     if (typeof raw !== "string" || raw.trim() === "") return { synced: false, lines: [] };
     var tag = /\[(\d{1,2}):(\d{1,2}(?:[.:]\d{1,3})?)\]/g;
@@ -218,113 +207,62 @@
       }
       var text = row.replace(tag, "").trim();
       if (matches.length) { hasTimed = true; matches.forEach(function (t) { timed.push({ t: t, text: text }); }); }
-      else plain.push({ t: null, text: text });
+      else if (text) plain.push({ t: null, text: text });
     });
     if (hasTimed) { timed.sort(function (a, b) { return a.t - b.t; }); return { synced: true, lines: timed }; }
     return { synced: false, lines: plain };
   }
 
+  // Charge le .lrc de la piste de facon asynchrone. lyricsRequestId protege
+  // contre une reponse perimee qui arriverait APRES un changement de piste
+  // plus recent (l'utilisateur qui enchaine vite plusieurs morceaux) : seule
+  // la derniere requete en date est appliquee.
   function loadLyrics(track) {
-    currentLyrics = parseLyrics(track && track.lyrics);
-    activeLine = -1; lineEls = []; lyricsBox.innerHTML = "";
-    var hasCredits = track && track.credits;
-    // La section reste toujours accessible en plein ecran (bandeau + fond
-    // panoramiques valables meme sans paroles).
-    lyricsSection.hidden = false;
-    if (hasCredits) { lyricsCredits.textContent = track.credits; lyricsCredits.hidden = false; }
-    else lyricsCredits.hidden = true;
-
-    currentLyrics.lines.forEach(function (line) {
-      var d = el("div", "lyric-line", line.text || " ");
-      d.setAttribute("role", "listitem");
-      lyricsBox.appendChild(d);
-      lineEls.push(d);
-    });
-    syncLyrics(player.relPosition(), true);
+    currentLyrics = { synced: false, lines: [] };
+    activeLineIndex = -1;
+    if (expandLyricLine) expandLyricLine.textContent = "";
+    var file = track && track.lyricsFile;
+    if (!file) return;
+    var requestId = ++lyricsRequestId;
+    fetch(file)
+      .then(function (r) { return r.ok ? r.text() : Promise.reject(); })
+      .then(function (text) {
+        if (requestId !== lyricsRequestId) return;
+        currentLyrics = parseLyrics(text);
+        activeLineIndex = -1;
+        syncLyrics(player.relPosition(), true);
+      })
+      .catch(function () { /* pas de paroles disponibles pour ce morceau : pas bloquant */ });
   }
 
+  // N'affiche que la ligne EN COURS (pas de liste qui defile) : moins
+  // d'espace vertical necessaire dans l'accordeon.
   function syncLyrics(position, force) {
-    if (!currentLyrics.synced || lineEls.length === 0) return;
+    if (!currentLyrics.synced || !currentLyrics.lines.length) return;
     var lines = currentLyrics.lines;
     var idx = -1;
     for (var i = 0; i < lines.length; i++) {
       if (lines[i].t <= position + 0.15) idx = i; else break;
     }
     if (idx === -1) idx = 0;
-    if (idx !== activeLine || force) {
-      lineEls.forEach(function (n) { n.classList.remove("active", "near", "waiting"); });
-      activeLine = idx;
-      var node = lineEls[idx];
-      if (node) {
-        node.classList.add("active");
-        if (lineEls[idx - 1]) lineEls[idx - 1].classList.add("near");
-        if (lineEls[idx + 1]) lineEls[idx + 1].classList.add("near");
-        autoScrollTo(node);
-      }
-    }
-    updateWaiting(idx, position);
+    if (idx === activeLineIndex && !force) return;
+    activeLineIndex = idx;
+    if (expandLyricLine) expandLyricLine.textContent = lines[idx].text || "";
   }
 
-  // Grand ecart instrumental : marque la ligne active "waiting" (points animes).
-  function updateWaiting(idx, position) {
-    var node = lineEls[idx];
-    if (!node) return;
-    var lines = currentLyrics.lines;
-    var cur = lines[idx].t;
-    var nxt = idx + 1 < lines.length ? lines[idx + 1].t : player.relDuration();
-    if (!isFinite(nxt)) nxt = cur + 4;
-    var gap = nxt - cur, into = position - cur, toNext = nxt - position;
-    node.classList.toggle("waiting", gap > 6 && into > 3.5 && toNext > 2);
-  }
-
-  // La ligne active se cale plus haut (32% au lieu du centre) qu'un simple
-  // centrage : sinon, sur une phrase longue (ou avec la ligne "near"
-  // suivante), le bas du texte se retrouve sous le panel du lecteur fixe en
-  // bas de l'ecran.
-  //
-  // L'animation est faite main (rAF), PAS via scrollTo({behavior:"smooth"}) :
-  // sur les paroles synchro, les lignes s'enchainent parfois plus vite que la
-  // duree du smooth-scroll natif, donc un nouvel appel interrompt souvent le
-  // precedent. Certains navigateurs relancent alors l'anim depuis une position
-  // de depart perimee au lieu de la position reellement affichee, ce qui se
-  // voit comme un retour en arriere avant de repartir vers la ligne suivante.
-  // En pilotant scrollTop nous-memes a chaque frame, un nouvel appel repart
-  // toujours de la position ACTUELLEMENT affichee : aucune interruption
-  // possible.
-  var lyricScrollRAF = null;
-  function autoScrollTo(node) {
-    var box = lyricsBox;
-    var target = node.offsetTop - box.clientHeight * 0.32 + node.clientHeight / 2;
-    if (lyricScrollRAF) { cancelAnimationFrame(lyricScrollRAF); lyricScrollRAF = null; }
-    if (reduceMotion || typeof requestAnimationFrame !== "function") { box.scrollTop = target; return; }
-    var from = box.scrollTop;
-    var delta = target - from;
-    if (Math.abs(delta) < 0.5) return;
-    var duration = 420, startTime = null;
-    function ease(p) { return 1 - Math.pow(1 - p, 3); }
-    function step(ts) {
-      if (startTime === null) startTime = ts;
-      var p = Math.min(1, (ts - startTime) / duration);
-      box.scrollTop = from + delta * ease(p);
-      lyricScrollRAF = p < 1 ? requestAnimationFrame(step) : null;
-    }
-    lyricScrollRAF = requestAnimationFrame(step);
-  }
-
-  // ------------------------------------------------------- Spectre (header)
+  // ------------------------------------------------------- Spectre (accordeon)
   // Fenetre glissante de 20s (10 avant / 10 apres la position courante),
-  // cue rouge fixe au centre. Les pics sont PRECALCULES a la construction du
-  // site (voir scripts/gen-waveforms, sortie dans assets/waveforms/*.json) :
-  // un petit JSON de quelques Ko charge quasi instantanement. Si le JSON
-  // manque pour une piste, on retombe sur un decodage Web Audio en direct.
+  // cue rouge fixe au centre, timecode affiche au-dessus de la cue. Les pics
+  // sont PRECALCULES a la construction du site (voir scripts/gen-waveforms,
+  // sortie dans assets/waveforms/*.json) : un petit JSON de quelques Ko
+  // charge quasi instantanement. Si le JSON manque pour une piste, on
+  // retombe sur un decodage Web Audio en direct.
   //
   // Le spectre de la piste entiere est dessine UNE SEULE FOIS (deux bitmaps :
   // deja-joue en bleu, a-venir en gris), et le defilement pendant la lecture
   // se fait ensuite par simple translateX sur ces bitmaps deja rendus —
   // anime par le compositeur (GPU), sans redessiner un seul pixel a chaque
-  // frame. La premiere version redessinait ~200 barres par frame et restait
-  // saccadee meme optimisee ; ceci est l'approche standard pour un defilement
-  // fluide (c'est ainsi que fonctionnent la plupart des lecteurs a spectre).
+  // frame.
   var waveformCtx = null;
   var waveformCache = {}; // fichier -> { peaks, pps }
   var waveformPeaksPerSecond = 10; // valeur par defaut, utilisee par le decodage de secours
@@ -463,22 +401,23 @@
   }
 
   // Seule fonction appelee a chaque frame pendant la lecture : deux
-  // affectations de style (transform), rien d'autre. C'est ce qui rend le
-  // defilement fluide, y compris sur mobile bas de gamme.
+  // affectations de style (transform) + le texte du timecode. C'est ce qui
+  // rend le defilement fluide, y compris sur mobile bas de gamme.
   // pos optionnel : position a afficher (utilise pendant le drag, voir plus
   // bas) ; sans argument, on prend la position reelle de lecture.
   function updateWaveformScroll(pos) {
-    if (!lyricsSection.classList.contains("fullscreen")) return;
+    if (!playerEl.classList.contains("expanded")) return;
     if (!waveformCurrentPeaks || !waveformCurrentPeaks.length || !waveformScale) return;
     var p = typeof pos === "number" ? pos : player.relPosition();
     var x = p * waveformScale;
     waveformCanvasAccent.style.transform = "translateX(" + (waveformHalfWidth - x) + "px)";
     waveformCanvasGray.style.transform = "translateX(" + -x + "px)";
+    if (waveformCueTime) waveformCueTime.textContent = formatTime(p);
   }
 
   function waveformTick() {
     // Pendant un drag, c'est la boucle de drag (plus bas) qui pilote deja
-    // l'affichage a la position de prevvisualisation : on ne doit pas
+    // l'affichage a la position de previsualisation : on ne doit pas
     // ecraser ca avec la position reelle de lecture (pas encore a jour tant
     // que le seek n'a pas ete commis).
     if (!waveformDrag) updateWaveformScroll();
@@ -492,7 +431,7 @@
     if (waveformRAF) { cancelAnimationFrame(waveformRAF); waveformRAF = null; }
   }
   window.addEventListener("resize", function () {
-    if (lyricsSection.classList.contains("fullscreen")) { buildWaveformBitmaps(); updateWaveformScroll(); }
+    if (playerEl.classList.contains("expanded")) { buildWaveformBitmaps(); updateWaveformScroll(); }
   });
 
   // Le spectre se deplace au doigt : on tire le ruban, la cue ne bouge pas.
@@ -504,7 +443,7 @@
   // frequemment au doigt (jusqu'a plus de 60 fois/seconde sur certains
   // mobiles) : appeler un vrai seek a CHAQUE evenement crée a la fois des
   // saccades pendant le drag (le decodeur n'arrive pas a suivre) et une
-  // grosse survonsommation batterie. On separe donc l'affichage (suit le
+  // grosse surconsommation batterie. On separe donc l'affichage (suit le
   // doigt a chaque evenement, pas cher : juste un transform) du seek reel,
   // qui n'est commis qu'une fois par frame via rAF.
   var waveformDrag = null;
@@ -548,12 +487,12 @@
     waveformEl.addEventListener("pointercancel", endWaveformDrag);
   }
 
-  function toggleFullscreen(on) {
-    lyricsSection.classList.toggle("fullscreen", on);
-    document.body.classList.toggle("lyrics-locked", on);
-    if (miniBtn) miniBtn.setAttribute("aria-label", on ? "Revenir a la liste des titres" : "Plein ecran");
-    if (on) syncLyrics(player.relPosition(), true);
+  // ------------------------------------------------------------- Accordeon
+  function toggleExpand(on) {
+    playerEl.classList.toggle("expanded", on);
+    if (miniBtn) miniBtn.setAttribute("aria-label", on ? "Reduire" : "Agrandir");
     if (on) {
+      syncLyrics(player.relPosition(), true);
       loadWaveform(currentTrackRef);
       if (player.isPlaying()) startWaveformLoop(); else updateWaveformScroll();
     } else {
@@ -561,15 +500,14 @@
     }
   }
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && lyricsSection.classList.contains("fullscreen")) toggleFullscreen(false);
+    if (e.key === "Escape" && playerEl.classList.contains("expanded")) toggleExpand(false);
   });
 
-  // Vignette du lecteur -> bascule plein ecran (bandeau + fond + paroles).
-  // Re-cliquer dessus en plein ecran revient a la liste des titres.
+  // Vignette du lecteur -> deplie/replie l'accordeon.
   var miniBtn = $("mini-cover-btn");
   if (miniBtn) {
     miniBtn.addEventListener("click", function () {
-      toggleFullscreen(!lyricsSection.classList.contains("fullscreen"));
+      toggleExpand(!playerEl.classList.contains("expanded"));
     });
   }
 
@@ -598,11 +536,11 @@
     // empecher les autres de s'appliquer.
     try { loadLyrics(t); } catch (err) { console.error("[app] loadLyrics:", err); }
     try { setScene(t.scene); } catch (err) { console.error("[app] setScene:", err); }
-    try { updateTrackVisuals(t); } catch (err) { console.error("[app] updateTrackVisuals:", err); }
-    // Le spectre ne se (re)decode que si le plein ecran est deja ouvert
-    // (sinon on attend que l'utilisateur y entre pour eviter de decoder de
-    // l'audio en arriere-plan pour rien).
-    if (lyricsSection.classList.contains("fullscreen")) {
+    try { updateExpandVisuals(t); } catch (err) { console.error("[app] updateExpandVisuals:", err); }
+    // Le spectre ne se (re)decode que si l'accordeon est deja deplie (sinon
+    // on attend que l'utilisateur l'ouvre pour eviter de decoder de l'audio
+    // en arriere-plan pour rien).
+    if (playerEl.classList.contains("expanded")) {
       try { loadWaveform(t); } catch (err) { console.error("[app] loadWaveform:", err); }
     }
   });
@@ -611,7 +549,7 @@
     btnPlay.classList.toggle("is-playing", e.playing);
     btnPlay.setAttribute("aria-label", e.playing ? "Pause" : "Lecture");
     document.body.classList.toggle("is-playing", e.playing);
-    if (lyricsSection.classList.contains("fullscreen")) {
+    if (playerEl.classList.contains("expanded")) {
       if (e.playing) startWaveformLoop();
       else { stopWaveformLoop(); updateWaveformScroll(); }
     }
