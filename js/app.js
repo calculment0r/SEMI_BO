@@ -358,19 +358,31 @@
     return file.replace("/audio/", "/assets/waveforms/").replace(/\.mp3(\?.*)?$/i, ".json");
   }
 
+  // Meme traitement que scripts/gen-waveforms.js (RMS normalise par piste puis
+  // courbe gamma) pour que le repli en direct rende comme les JSON precalcules.
+  // Le pic brut ne convient pas : sur ces masters tres limites il sature
+  // presque partout et le spectre devient un bloc plein.
+  var WAVEFORM_GAMMA = 0.9; // doit rester identique a GAMMA dans scripts/gen-waveforms.js
   function extractPeaks(buffer) {
     var ch0 = buffer.getChannelData(0);
     var ch1 = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : null;
     var bucket = Math.max(1, Math.round(buffer.sampleRate / waveformPeaksPerSecond));
     var total = Math.ceil(ch0.length / bucket);
-    var peaks = new Float32Array(total);
+    var rms = new Float32Array(total);
     for (var p = 0; p < total; p++) {
-      var start = p * bucket, end = Math.min(start + bucket, ch0.length), max = 0;
+      var start = p * bucket, end = Math.min(start + bucket, ch0.length), sum = 0, n = 0;
       for (var i = start; i < end; i++) {
-        var v = ch1 ? (Math.abs(ch0[i]) + Math.abs(ch1[i])) / 2 : Math.abs(ch0[i]);
-        if (v > max) max = v;
+        var v = ch1 ? (ch0[i] + ch1[i]) / 2 : ch0[i];
+        sum += v * v; n++;
       }
-      peaks[p] = max;
+      rms[p] = n ? Math.sqrt(sum / n) : 0;
+    }
+    var sorted = Array.prototype.slice.call(rms).sort(function (a, b) { return a - b; });
+    var ref = sorted[Math.floor(sorted.length * 0.99)] || sorted[sorted.length - 1] || 1;
+    var peaks = new Float32Array(total);
+    for (var q = 0; q < total; q++) {
+      var norm = ref > 0 ? Math.min(1, rms[q] / ref) : 0;
+      peaks[q] = Math.pow(norm, WAVEFORM_GAMMA);
     }
     return peaks;
   }
@@ -464,7 +476,10 @@
       g.beginPath();
       for (var i = 0; i < peaks.length; i++) {
         var x = (i / peaks.length) * pxWidth;
-        var barH = Math.max(1, Math.min(1, peaks[i] * 1.15) * maxBarH);
+        // Pas de gain applique ici : les valeurs sont deja normalisees par
+        // piste a la generation. L'ancien coefficient x1.15 ne faisait que
+        // saturer davantage de barres a pleine hauteur.
+        var barH = Math.max(1, Math.min(1, peaks[i]) * maxBarH);
         g.rect(x - barW / 2, midY - barH / 2, barW, barH);
       }
       g.fill();
