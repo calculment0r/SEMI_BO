@@ -169,6 +169,7 @@
   var expandArtist = $("expand-artist");
   var expandTrack = $("expand-track");
   var expandLyricLine = $("expand-lyric-line");
+  var expandLyricsWrap = document.querySelector(".expand-lyrics");
   var waveformCanvasAccent = $("waveform-canvas-accent");
   var waveformCanvasGray = $("waveform-canvas-gray");
   var waveformEl = $("waveform");
@@ -273,6 +274,28 @@
   // vertical necessaire dans l'accordeon. Un bloc peut contenir plusieurs
   // textes s'ils partagent le meme timestamp (aparte + phrase) : ils sont
   // alors montres ensemble jusqu'au timestamp suivant.
+  // La zone de paroles est volontairement fine et de hauteur FIXE (elle ne
+  // doit jamais redimensionner le panneau). Les rares blocs trop longs pour
+  // y tenir sont reduits juste ce qu'il faut, plutot que d'imposer a tous
+  // les autres une grande reserve vide — ou d'etre rognes.
+  function fitLyricBlock() {
+    var box = expandLyricsWrap;
+    if (!box || !expandLyricLine) return;
+    expandLyricLine.style.fontSize = "";
+    if (!expandLyricLine.firstChild) return;
+    var cs = getComputedStyle(box);
+    var avail = box.clientHeight - parseFloat(cs.paddingTop || 0);
+    if (!(avail > 0)) return;
+    var size = parseFloat(getComputedStyle(expandLyricLine).fontSize);
+    var min = size * 0.62;
+    // Descente par petits pas : en pratique 0 a 3 tours, uniquement au
+    // changement de bloc (pas a chaque frame).
+    while (size > min && expandLyricLine.getBoundingClientRect().height > avail + 0.5) {
+      size -= 1;
+      expandLyricLine.style.fontSize = size + "px";
+    }
+  }
+
   function renderLyricBlock(entry) {
     if (!expandLyricLine) return;
     expandLyricLine.textContent = "";
@@ -282,6 +305,7 @@
       span.textContent = text;
       expandLyricLine.appendChild(span);
     });
+    fitLyricBlock();
   }
 
   function syncLyrics(position, force) {
@@ -478,6 +502,9 @@
     if (waveformRAF) { cancelAnimationFrame(waveformRAF); waveformRAF = null; }
   }
   window.addEventListener("resize", function () {
+    // La taille de police des paroles suit un clamp() dependant de la
+    // largeur : la reduction eventuelle doit etre recalculee.
+    fitLyricBlock();
     if (playerEl.classList.contains("expanded")) { buildWaveformBitmaps(); updateWaveformScroll(); }
   });
 

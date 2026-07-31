@@ -26,12 +26,11 @@
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 
   --player-h: 76px;
-  /* Nombre de lignes de paroles reservees en permanence (cf. .expand-lyrics).
-     Mesure faite sur tout l'album : le bloc le plus long atteint 4 lignes
-     (sur ecran etroit). On reserve 4,5 lignes pour garder une marge — les
-     polices systeme d'iOS ne mesurent pas exactement comme celles de test,
-     et un texte rogne serait pire qu'un peu d'espace en trop. */
-  --lyric-lines: 4.5;
+  /* Hauteur reservee aux paroles, en lignes (cf. .expand-lyrics). Panneau
+     volontairement fin : les rares blocs plus longs sont reduits juste ce
+     qu'il faut par fitLyricBlock() (app.js) au lieu d'imposer a TOUS les
+     autres une grande zone vide. */
+  --lyric-lines: 2.6;
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
@@ -178,8 +177,10 @@ body.is-playing .track.current .track-eq i { animation: eq 0.95s ease-in-out inf
    compositeur, sans redessiner le moindre pixel pendant la lecture. Chaque
    moitie (.waveform-half-*) affiche la meme piste, decalee exactement d'une
    demi-largeur, et masque tout ce qui deborde de son cote de la cue. */
+/* Place juste au-dessus de la barre du lecteur (sous le titre) : le spectre
+   se lit comme le rail de lecture des controles qui le suivent. */
 .waveform {
-  position: relative; z-index: 1; height: 44px; margin: 0 20px; overflow: hidden;
+  position: relative; z-index: 1; height: 44px; margin: 2px 20px 8px; overflow: hidden;
   touch-action: none; cursor: grab;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
           mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
@@ -236,11 +237,11 @@ body.is-playing .track.current .track-eq i { animation: eq 0.95s ease-in-out inf
    texte est cale en bas et grandit vers le haut a l'interieur. La hauteur
    reste responsive (calculee en em, donc suit clamp() de la police). */
 .expand-lyrics {
-  position: relative; z-index: 1; padding: 12px 20px 0;
+  position: relative; z-index: 1; padding: 10px 20px 0;
   /* font-size porte ici pour que le "em" ci-dessous suive le clamp() de la
      police des paroles : la reserve reste donc proportionnee a l'ecran. */
-  font-size: clamp(1.05rem, 4.4vw, 1.35rem);
-  height: calc(var(--lyric-lines) * 1.3em + 12px);
+  font-size: clamp(1.02rem, 4.2vw, 1.3rem);
+  height: calc(var(--lyric-lines) * 1.3em + 10px);
   display: flex; align-items: flex-end; overflow: hidden;
 }
 .expand-lyric-line {
@@ -258,7 +259,7 @@ body.is-playing .track.current .track-eq i { animation: eq 0.95s ease-in-out inf
   color: var(--muted); margin-bottom: 2px;
 }
 
-.expand-info { position: relative; z-index: 1; padding: 10px 20px 16px; }
+.expand-info { position: relative; z-index: 1; padding: 8px 20px 2px; }
 .expand-artist {
   margin: 0 0 2px; font-family: var(--font-mono); font-size: 0.66rem;
   letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent);
