@@ -28,6 +28,14 @@ window.ALBUM_DATA = {
   cover: "./assets/cover-1200.jpg",
   artwork512: "./assets/cover-512.jpg",
 
+  // Image du bandeau en haut de la page. Distincte de "cover" : la pochette
+  // carree porte deja le mot SEMI incruste, qui se retrouvait coupe une fois
+  // recadre en 21:9. Ici le titre est du vrai texte pose par-dessus (voir
+  // .cover-title), donc l'image ne doit pas en contenir. Les visuels de
+  // assets/scenes sont deja en 1470x630, soit exactement du 21:9 : aucun
+  // recadrage, l'image est vue en entier.
+  headerImage: "./assets/scenes/scene-booking.jpg",
+
   playbackMode: "separate",
   continuousFile: "./audio/album-complet.mp3",
 

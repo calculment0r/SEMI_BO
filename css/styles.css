@@ -34,6 +34,18 @@
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
+/* Archivo Black — la graisse utilisee pour le mot SEMI de la pochette.
+   Servie depuis le depot (assets/fonts/), pas depuis Google Fonts : le site
+   reste autonome et fonctionne hors-ligne. Licence OFL, voir
+   assets/fonts/OFL.txt. */
+@font-face {
+  font-family: "Archivo Black";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/archivo-black-latin.woff2") format("woff2");
+}
+
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { margin: 0; padding: 0; }
@@ -115,6 +127,24 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
   position: absolute; top: max(12px, env(safe-area-inset-top)); left: 16px; right: 16px; z-index: 1; margin: 0;
   font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.24em; text-transform: uppercase;
   color: rgba(242, 244, 246, 0.88); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* Le mot SEMI, en vrai texte par-dessus l'image (il etait auparavant incruste
+   dans la pochette carree et se retrouvait coupe au recadrage 21:9). Cale en
+   bas a gauche, largeur suivie en vw pour rester entier a toutes les tailles.
+   Le degrade sous le texte le detache du fond quel que soit le visuel. */
+.cover-title {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 1;
+  margin: 0; padding: 0 16px 3.2vw;
+  font-family: "Archivo Black", var(--font-display);
+  font-weight: 400; /* Archivo Black EST la graisse : pas de faux gras */
+  font-size: clamp(2.6rem, 15vw, 8.4rem);
+  line-height: 0.9; letter-spacing: -0.02em; color: #fff;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.55);
+}
+.cover-frame::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(5,7,10,0.35) 0%, rgba(5,7,10,0) 38%, rgba(5,7,10,0.55) 100%);
 }
 
 .album-meta { animation: fade-up 0.9s var(--ease) 0.12s both; }

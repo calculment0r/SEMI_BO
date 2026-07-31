@@ -67,11 +67,16 @@
 
   // ---------------------------------------------------------------- Header
   var cover = $("cover");
-  if (data.cover) {
-    cover.src = data.cover;
+  // headerImage si fourni, sinon la pochette (cf. album-data.js).
+  var headerSrc = data.headerImage || data.cover;
+  if (headerSrc) {
+    cover.src = headerSrc;
     cover.onerror = function () { cover.style.opacity = "0"; };
   }
-  cover.alt = "Pochette de l'album " + (data.title || "");
+  // Le titre est un vrai texte pose par-dessus : l'image reste decorative.
+  cover.alt = "";
+  var coverTitle = $("cover-title");
+  if (coverTitle) coverTitle.textContent = data.title || "";
   // La vignette du lecteur (mini-cover) est mise a jour par piste dans
   // updateExpandVisuals ; cover-512 sert juste de repli avant le 1er morceau.
   var miniCover = $("mini-cover");
